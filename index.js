@@ -1,5 +1,6 @@
 const MIN_PING = 100
-const MAX_DELAY_ADDED = 16
+const MAX_DELAY_ADDED = 50
+const POLL_RATE = 6000
 
 /**
  * 3 Steps to throttle
@@ -65,7 +66,6 @@ const createPingDictionary = function (playerList) {
 
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
-const cached_ipsThrottled = new Set()
 
 /**
  * Main execution
@@ -119,10 +119,8 @@ const main = async function () {
 
     if (newDelay > 0) {
       await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
-      cached_ipsThrottled.add(playerInfo.ip)
-    } else if (cached_ipsThrottled.has(playerInfo.playfab)) {
+    } else {
       await NetworkUtils.deleteRule(playerInfo.ip)
-      cached_ipsThrottled.delete(playerInfo.ip)
     }
   })
 
@@ -149,21 +147,27 @@ const mainInterval = function () {
       console.log(err)
     })
     .finally(function () {
-      setTimeout(mainInterval, 3000)
+      setTimeout(mainInterval, POLL_RATE)
     })
 }
 
 const deleteAllRulesWithLogging = function () {
-  return NetworkUtils.deleteAllRules()
-    .then(function () {
-      console.log('Wiped rules successfully')
-    })
-    .catch(function (err) {
-      console.log('Error while wiping rules', err)
-    })
+  return NetworkUtils.deleteAllRules().then(function () {
+    console.log('Wiped rules successfully')
+  })
 }
 
-deleteAllRulesWithLogging()
+const startupProcesses = async function () {
+  await deleteAllRulesWithLogging().catch(function (err) {
+    console.log('Error while wiping rules', err)
+    process.exit()
+  })
+
+  mainInterval()
+  console.log('hello!')
+}
+
+startupProcesses()
 
 process.on('SIGINT', () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
@@ -174,5 +178,3 @@ process.on('SIGINT', () => {
     process.exit()
   }, 5000)
 })
-
-console.log('hello!')

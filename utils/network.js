@@ -28,7 +28,7 @@ const addOrChangeRule = async function (ip, amountOfDelayToAdd) {
 const deleteRule = async function (ip) {
   const networkInterfaceId = await getNetworkInterfaceId()
   const command = `tcdel ${networkInterfaceId} --src-network ${ip}/32`
-  return promisifiedExec(command)
+  return promisifiedExec(command).catch(() => {})
 }
 
 const deleteAllRules = async function () {
