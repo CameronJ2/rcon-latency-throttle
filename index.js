@@ -1,4 +1,4 @@
-const MIN_PING = 50
+const MIN_PING = 100
 
 /**
  * 3 Steps to throttle
@@ -91,7 +91,7 @@ const main = async function () {
       console.log(`File parse took approximately ${after - now}ms`)
 
       const ip = ipWithUnwantedCharacters.replace('\n', '')
-      cached_playfabToIpAndDelay[playfab] = { ip, playfab, ping }
+      cached_playfabToIpAndDelay[playfab] = { ip, playfab, ping: pingDictionary[playfab] }
       
       return cached_playfabToIpAndDelay[playfab]
     })
@@ -102,7 +102,9 @@ const main = async function () {
   const delayPromises = playerInfoList.map(async function (playerInfo) {
     const truePing = playerInfo.ping - (cached_playfabToIpAndDelay[playerInfo.playfab]?.lastAmountOfDelayAdded ?? 0)
     const amountOfDelayToAdd = Math.max(MIN_PING - truePing, 0)
-    cached_playfabToIpAndDelay[playerInfo.playfab].lastAmountOfDelayAdded = amountOfDelayToAdd
+
+    console.log({ truePing, amountOfDelayToAdd, playerInfo, cached_playerInfo: cached_playfabToIpAndDelay[playerInfo] })
+    cached_playfabToIpAndDelay[playerInfo.playfab] = { ip: playerInfo.ip, lastAmountOfDelayAdded: amountOfDelayToAdd }
 
     if (amountOfDelayToAdd === 0) {
       await NetworkUtils.deleteRule(playerInfo.ip)
@@ -113,7 +115,6 @@ const main = async function () {
 
   await Promise.all(delayPromises)
   console.log('All required players have been throttled')
-  console.log(playerInfoList)
 }
 
 setInterval(function () {
