@@ -7,7 +7,7 @@ module.exports.promisifiedExec = function (cmd) {
   const exec = require('child_process').exec;
 
   return new Promise((resolve, reject) => {
-   exec(cmd, (error, stdout, stderr) => {
+   exec(cmd, { shell: '/bin/bash' }, (error, stdout, stderr) => {
     if (error) {
      console.warn(error);
     }
