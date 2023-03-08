@@ -4,7 +4,7 @@
  * 3. (stretch) Function that deletes a rule
  */
 
-const { promisifiedExec } = require('./utils/execPromise.js')
+const { promisifiedExec } = require('./execPromise.js')
 
 const cached_networkInterfaceId = null
 

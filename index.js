@@ -10,12 +10,9 @@ const MIN_PING = 50
  * [] Add polling
  */
 
-const path = require('path')
 const { Rcon } = require('rcon-client')
-const { promisifiedExec } = require(path.join(__dirname, '/utils/execPromise.js'))
-const NetworkUtils = require(path.join(__dirname, '/utils/network.js'))
-
-console.log({ dirname: __dirname })
+const { promisifiedExec } = require('./utils/execPromise.js')
+const NetworkUtils = require('./utils/network.js')
 
 let cached_rcon = null
 
