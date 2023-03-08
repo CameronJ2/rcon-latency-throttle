@@ -72,10 +72,12 @@ const cached_playfabToLastDelay = {}
  */
 const main = async function () {
   const rcon = await getRcon()
+
+  const beforePlayerList = Date.now()
   const playerList = await getPlayerList(rcon)
+  console.log(`Rcon player list took approximately ${Date.now() - beforePlayerList}ms`)
 
   const pingDictionary = createPingDictionary(playerList)
-
   const playfabs = Object.entries(pingDictionary)
 
   const ipPromises = playfabs.map(async function ([playfab, ping]) {
@@ -98,13 +100,15 @@ const main = async function () {
 
   const playerInfoList = await Promise.all(ipPromises)
 
+  const beforeRules = Date.now()
+
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
     const currentDelay = cached_playfabToLastDelay[playerInfo.playfab] ?? 0
-    const delayToAdd = Math.min(
-      Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED),
-      MAX_DELAY_ADDED
-    )
+    const delayToAdd =
+      playerInfo.ping > 0
+        ? Math.min(Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
+        : 0
     const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
 
     console.log({
@@ -125,6 +129,7 @@ const main = async function () {
   })
 
   await Promise.all(delayPromises)
+  console.log(`Rule adding/deleting took approximately ${Date.now() - beforeRules}ms`)
   console.log('All required players have been throttled')
 }
 
