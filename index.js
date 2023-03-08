@@ -140,7 +140,7 @@ const main = async function () {
   console.log('All required players have been throttled')
 }
 
-setInterval(function () {
+const mainInterval = setInterval(function () {
   const now = Date.now()
   main()
     .then(function () {
@@ -164,12 +164,16 @@ const deleteAllRulesWithLogging = function () {
 deleteAllRulesWithLogging()
 
 process.on("SIGINT", () => {
-  console.log("Caught SIGINT. Exiting in 5 seconds.");
-  deleteAllRulesWithLogging()
+  clearInterval(mainInterval)
+  console.log("Caught SIGINT. Performing cleanup before exiting.");
+
 
   setTimeout(() => {
-    console.log("This should appear in the Electron console but the process will be long killed.");
-    process.exit(0);
+    deleteAllRulesWithLogging()
+
+    setTimeout(() => {
+      process.exit()
+    }, 2000)
   }, 5000);
 });
 
