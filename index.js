@@ -1,4 +1,5 @@
 const MIN_PING = 100
+const MAX_DELAY_ADDED = 16
 
 /**
  * 3 Steps to throttle
@@ -64,7 +65,7 @@ const createPingDictionary = function (playerList) {
 
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
-const cached_playfabsCounter = {}
+const cached_ipsThrottled = new Set()
 
 /**
  * Main execution
@@ -77,43 +78,34 @@ const main = async function () {
 
   const playfabs = Object.entries(pingDictionary)
 
-  playfabs.forEach(function (playfab) {
-    if (!cached_playfabsCounter[playfab]) {
-      cached_playfabsCounter[playfab] = 1
-    } else {
-      cached_playfabsCounter[playfab] += 1
+  const ipPromises = playfabs.map(async function ([playfab, ping]) {
+    if (typeof cached_playfabToIp[playfab] === 'number') {
+      return { ip: cached_playfabToIp[playfab], playfab, ping }
     }
+
+    const now = Date.now()
+    const ipWithUnwantedCharacters = await promisifiedExec(
+      `grep ${playfab} Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+    )
+    const after = Date.now()
+    console.log(`File parse took approximately ${after - now}ms`)
+
+    const ip = ipWithUnwantedCharacters.replace('\n', '')
+    cached_playfabToIp[playfab] = ip
+
+    return { ip, playfab, ping }
   })
-
-  const ipPromises = playfabs
-    .filter(function (playfab) {
-      // Skip throttling if this playfab has ben updated _once_, to avoid rubber banding issue
-      return cached_playfabsCounter[playfab] !== 2
-    })
-    .map(async function ([playfab, ping]) {
-      if (typeof cached_playfabToIp[playfab] === 'number') {
-        return { ip: cached_playfabToIp[playfab], playfab, ping }
-      }
-
-      const now = Date.now()
-      const ipWithUnwantedCharacters = await promisifiedExec(
-        `grep ${playfab} Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
-      )
-      const after = Date.now()
-      console.log(`File parse took approximately ${after - now}ms`)
-
-      const ip = ipWithUnwantedCharacters.replace('\n', '')
-      cached_playfabToIp[playfab] = ip
-
-      return { ip, playfab, ping }
-    })
 
   const playerInfoList = await Promise.all(ipPromises)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
     const currentDelay = cached_playfabToLastDelay[playerInfo.playfab] ?? 0
-    const newDelay = Math.min(currentDelay + (MIN_PING - playerInfo.ping), MIN_PING)
+    const delayToAdd = Math.min(
+      Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED),
+      MAX_DELAY_ADDED
+    )
+    const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
 
     console.log({
       ip: playerInfo.ip,
@@ -125,10 +117,12 @@ const main = async function () {
 
     cached_playfabToLastDelay[playerInfo.playfab] = newDelay
 
-    if (newDelay <= 0) {
+    if (newDelay > 0) {
+      await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
+      cached_ipsThrottled.add(playerInfo.ip)
+    } else if (cached_ipsThrottled.has(playerInfo.playfab)) {
       await NetworkUtils.deleteRule(playerInfo.ip)
-    } else {
-      await NetworkUtils.addRule(playerInfo.ip, newDelay)
+      cached_ipsThrottled.delete(playerInfo.ip)
     }
   })
 
@@ -136,8 +130,15 @@ const main = async function () {
   console.log('All required players have been throttled')
 }
 
-const mainInterval = setInterval(function () {
+let stopInterval = false
+
+const mainInterval = function () {
+  if (stopInterval) {
+    return
+  }
+
   const now = Date.now()
+
   main()
     .then(function () {
       const after = Date.now()
@@ -147,7 +148,10 @@ const mainInterval = setInterval(function () {
       console.log('There was an error in main')
       console.log(err)
     })
-}, 5000)
+    .finally(function () {
+      setTimeout(mainInterval, 3000)
+    })
+}
 
 const deleteAllRulesWithLogging = function () {
   return NetworkUtils.deleteAllRules()
@@ -162,18 +166,13 @@ const deleteAllRulesWithLogging = function () {
 deleteAllRulesWithLogging()
 
 process.on('SIGINT', () => {
-  clearInterval(mainInterval)
   console.log('Caught SIGINT. Performing cleanup before exiting.')
+  stopInterval = true
 
-  setTimeout(() => {
-    deleteAllRulesWithLogging()
-
-    setTimeout(() => {
-      process.exit()
-    }, 2000)
+  setTimeout(async function () {
+    await deleteAllRulesWithLogging()
+    process.exit()
   }, 5000)
 })
-
-// more stuff
 
 console.log('hello!')
