@@ -103,7 +103,12 @@ const main = async function () {
     const truePing = playerInfo.ping - (cached_playfabToIpAndDelay[playerInfo.playfab]?.lastAmountOfDelayAdded ?? 0)
     const amountOfDelayToAdd = Math.max(MIN_PING - truePing, 0)
     cached_playfabToIpAndDelay[playerInfo.playfab].lastAmountOfDelayAdded = amountOfDelayToAdd
-    await NetworkUtils.addRule(playerInfo.ip, amountOfDelayToAdd)
+
+    if (amountOfDelayToAdd === 0) {
+      await NetworkUtils.deleteRule(playerInfo.ip)
+    } else {
+      await NetworkUtils.addRule(playerInfo.ip, amountOfDelayToAdd)
+    }
   })
 
   await Promise.all(delayPromises)
