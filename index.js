@@ -61,7 +61,12 @@ const createPingDictionary = function (playerList) {
   return dictionary
 }
 
-const cached_playfabToIP = {}
+const cached_playfabToIpAndDelay = {
+  // '121521asrtf231': {
+  //   ip: '1.2.3.4',
+  //   lastAmountOfDelayAdded: 25
+  // }
+}
 
 /**
  * Main execution
@@ -76,8 +81,8 @@ const main = async function () {
   
   const ipPromises = playfabs
     .map(async function (playfab) {
-      if (cached_playfabToIP[playfab]) {
-        return { ip: cached_playfabToIP[playfab], ping: pingDictionary[playfab] }
+      if (cached_playfabToIpAndDelay[playfab]?.ip) {
+        return { ip: cached_playfabToIpAndDelay[playfab].ip, ping: pingDictionary[playfab] }
       }
 
       const now = Date.now()
@@ -86,21 +91,18 @@ const main = async function () {
       console.log(`File parse took approximately ${after - now}ms`)
 
       const ip = ipWithUnwantedCharacters.replace('\n', '')
-      cached_playfabToIP[playfab] = ip
+      cached_playfabToIpAndDelay[playfab] = { ip, playfab, ping }
       
-      return { ip, ping: pingDictionary[playfab] }
+      return cached_playfabToIpAndDelay[playfab]
     })
   
   const playerInfoList = await Promise.all(ipPromises)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
-    if (playerInfo.ping >= MIN_PING) {
-      return
-    }
-
-    // Set up a traffic rule. Set a delay on this ip by (MIN_PING - playerInfo.ping)
-    const amountOfDelayToAdd = MIN_PING - playerInfo.ping
+    const truePing = playerInfo.ping - (cached_playfabToIpAndDelay[playerInfo.playfab]?.lastAmountOfDelayAdded ?? 0)
+    const amountOfDelayToAdd = Math.max(MIN_PING - truePing, 0)
+    cached_playfabToIpAndDelay[playerInfo.playfab].lastAmountOfDelayAdded = amountOfDelayToAdd
     await NetworkUtils.addRule(playerInfo.ip, amountOfDelayToAdd)
   })
 
@@ -115,6 +117,7 @@ setInterval(function () {
     .then(function () {
       const after = Date.now()
       console.log(`Main took approximately ${after - now}ms`)
+      console.log({ cached_playfabToIpAndDelay })
     })
     .catch(function (err) {
       console.log('There was an error in main')
