@@ -61,12 +61,15 @@ const createPingDictionary = function (playerList) {
   return dictionary
 }
 
-const cached_playfabToIpAndDelay = {
-  // '121521asrtf231': {
-  //   ip: '1.2.3.4',
-  //   lastAmountOfDelayAdded: 25
-  // }
-}
+// const cached_playfabToIpAndDelay = {
+//   // '121521asrtf231': {
+//   //   ip: '1.2.3.4',
+//   //   lastAmountOfDelayAdded: 25
+//   // }
+// }
+
+const cached_playfabToIp = {}
+const cached_playfabToLastDelay = {}
 
 /**
  * Main execution
@@ -77,12 +80,12 @@ const main = async function () {
 
   const pingDictionary = createPingDictionary(playerList)
 
-  const playfabs = Object.keys(pingDictionary)
+  const playfabs = Object.entries(pingDictionary)
   
   const ipPromises = playfabs
-    .map(async function (playfab) {
-      if (cached_playfabToIpAndDelay[playfab]?.ip) {
-        return { ip: cached_playfabToIpAndDelay[playfab].ip, ping: pingDictionary[playfab] }
+    .map(async function ([playfab, ping]) {
+      if (typeof cached_playfabToIp[playfab] === 'number') {
+        return { ip: cached_playfabToIp[playfab], playfab, ping }
       }
 
       const now = Date.now()
@@ -91,20 +94,27 @@ const main = async function () {
       console.log(`File parse took approximately ${after - now}ms`)
 
       const ip = ipWithUnwantedCharacters.replace('\n', '')
-      cached_playfabToIpAndDelay[playfab] = { ip, playfab, ping: pingDictionary[playfab] }
-      
-      return cached_playfabToIpAndDelay[playfab]
+      cached_playfabToIp[playfab] = ip
+    
+      return { ip, playfab, ping }
     })
   
   const playerInfoList = await Promise.all(ipPromises)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
-    const truePing = playerInfo.ping - (cached_playfabToIpAndDelay[playerInfo.playfab]?.lastAmountOfDelayAdded ?? 0)
+    const truePing = playerInfo.ping - (cached_playfabToLastDelay[playerInfo.playfab] ?? 0)
     const amountOfDelayToAdd = Math.max(MIN_PING - truePing, 0)
 
-    console.log({ truePing, amountOfDelayToAdd, playerInfo, cached_playerInfo: cached_playfabToIpAndDelay[playerInfo] })
-    cached_playfabToIpAndDelay[playerInfo.playfab] = { ip: playerInfo.ip, lastAmountOfDelayAdded: amountOfDelayToAdd }
+    console.log({
+      ip: playerInfo.ip,
+      playfab: playerInfo.playfab,
+      rconPing: playerInfo.ping,
+      lastDelayAdded: cached_playfabToLastDelay[playerInfo.playfab],
+      truePing
+    })
+
+    cached_playfabToLastDelay[playerInfo.playfab] = amountOfDelayToAdd
 
     if (amountOfDelayToAdd === 0) {
       await NetworkUtils.deleteRule(playerInfo.ip)
@@ -123,7 +133,6 @@ setInterval(function () {
     .then(function () {
       const after = Date.now()
       console.log(`Main took approximately ${after - now}ms`)
-      console.log({ cached_playfabToIpAndDelay })
     })
     .catch(function (err) {
       console.log('There was an error in main')

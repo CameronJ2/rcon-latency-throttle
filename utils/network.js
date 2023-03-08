@@ -30,4 +30,10 @@ const deleteRule = async function (ip) {
   return promisifiedExec(command)
 }
 
-module.exports = { addRule, deleteRule }
+const deleteAllRules = async function () {
+  const networkInterfaceId = await getNetworkInterfaceId()
+  const command = `tcdel ${networkInterfaceId} --all`
+  return promisifiedExec(command)
+}
+
+module.exports = { addRule, deleteRule, deleteAllRules }
