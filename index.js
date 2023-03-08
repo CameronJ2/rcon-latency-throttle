@@ -20,12 +20,14 @@ let cached_rcon = null
  * Create a function that connects to rcon and returns the rcon object - call this getRcon()
  */
 const getRcon = async function () {
-    if (!cached_rcon){
-      cached_rcon = await Rcon.connect({
-        host: "192.187.124.138", port: 45851, password: "mfcstatrconfighter"
-      })
-    }
-    return cached_rcon
+  if (!cached_rcon) {
+    cached_rcon = await Rcon.connect({
+      host: '192.187.124.138',
+      port: 45851,
+      password: 'mfcstatrconfighter'
+    })
+  }
+  return cached_rcon
 }
 
 /**
@@ -33,9 +35,8 @@ const getRcon = async function () {
  * This function should take an rcon object as an argument
  */
 const getPlayerList = async function (rcon) {
-    return rcon.send("playerlist")
+  return rcon.send('playerlist')
 }
-
 
 /**
  * Function that takes a playerlist, returns a dictionary of playfabs to pings
@@ -61,13 +62,6 @@ const createPingDictionary = function (playerList) {
   return dictionary
 }
 
-// const cached_playfabToIpAndDelay = {
-//   // '121521asrtf231': {
-//   //   ip: '1.2.3.4',
-//   //   lastAmountOfDelayAdded: 25
-//   // }
-// }
-
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
 const cached_playfabsCounter = {}
@@ -90,7 +84,7 @@ const main = async function () {
       cached_playfabsCounter[playfab] += 1
     }
   })
-  
+
   const ipPromises = playfabs
     .filter(function (playfab) {
       // Skip throttling if this playfab has ben updated _once_, to avoid rubber banding issue
@@ -102,37 +96,39 @@ const main = async function () {
       }
 
       const now = Date.now()
-      const ipWithUnwantedCharacters = await promisifiedExec(`grep ${playfab} Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`)
+      const ipWithUnwantedCharacters = await promisifiedExec(
+        `grep ${playfab} Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+      )
       const after = Date.now()
       console.log(`File parse took approximately ${after - now}ms`)
 
       const ip = ipWithUnwantedCharacters.replace('\n', '')
       cached_playfabToIp[playfab] = ip
-    
+
       return { ip, playfab, ping }
     })
-  
+
   const playerInfoList = await Promise.all(ipPromises)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
-    const truePing = playerInfo.ping - (cached_playfabToLastDelay[playerInfo.playfab] ?? 0)
-    const amountOfDelayToAdd = Math.max(MIN_PING - truePing, 0)
+    const currentDelay = cached_playfabToLastDelay[playerInfo.playfab] ?? 0
+    const newDelay = Math.min(currentDelay + (MIN_PING - playerInfo.ping), MIN_PING)
 
     console.log({
       ip: playerInfo.ip,
       playfab: playerInfo.playfab,
       rconPing: playerInfo.ping,
-      lastDelayAdded: cached_playfabToLastDelay[playerInfo.playfab],
-      truePing
+      currentDelay,
+      newDelay
     })
 
-    cached_playfabToLastDelay[playerInfo.playfab] = amountOfDelayToAdd
+    cached_playfabToLastDelay[playerInfo.playfab] = newDelay
 
-    if (amountOfDelayToAdd === 0) {
+    if (newDelay <= 0) {
       await NetworkUtils.deleteRule(playerInfo.ip)
     } else {
-      await NetworkUtils.addRule(playerInfo.ip, amountOfDelayToAdd)
+      await NetworkUtils.addRule(playerInfo.ip, newDelay)
     }
   })
 
@@ -154,19 +150,20 @@ const mainInterval = setInterval(function () {
 }, 5000)
 
 const deleteAllRulesWithLogging = function () {
-  return NetworkUtils.deleteAllRules().then(function () {
-    console.log('Wiped rules successfully')
-  }).catch(function (err) {
-    console.log('Error while wiping rules', err)
-  })
+  return NetworkUtils.deleteAllRules()
+    .then(function () {
+      console.log('Wiped rules successfully')
+    })
+    .catch(function (err) {
+      console.log('Error while wiping rules', err)
+    })
 }
 
 deleteAllRulesWithLogging()
 
-process.on("SIGINT", () => {
+process.on('SIGINT', () => {
   clearInterval(mainInterval)
-  console.log("Caught SIGINT. Performing cleanup before exiting.");
-
+  console.log('Caught SIGINT. Performing cleanup before exiting.')
 
   setTimeout(() => {
     deleteAllRulesWithLogging()
@@ -174,12 +171,9 @@ process.on("SIGINT", () => {
     setTimeout(() => {
       process.exit()
     }, 2000)
-  }, 5000);
-});
-
-
+  }, 5000)
+})
 
 // more stuff
 
 console.log('hello!')
-
