@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/CameronJ2/rcon-latency-throttle/issues"
   },
-  "homepage": "https://github.com/CameronJ2/rcon-latency-throttle#readme"
+  "homepage": "https://github.com/CameronJ2/rcon-latency-throttle#readme",
+  "dependencies": {
+    "rcon-client": "^4.2.3"
+  }
 }
