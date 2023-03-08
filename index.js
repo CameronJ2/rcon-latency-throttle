@@ -70,6 +70,7 @@ const createPingDictionary = function (playerList) {
 
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
+const cached_playfabsCounter = {}
 
 /**
  * Main execution
@@ -81,8 +82,20 @@ const main = async function () {
   const pingDictionary = createPingDictionary(playerList)
 
   const playfabs = Object.entries(pingDictionary)
+
+  playfabs.forEach(function (playfab) {
+    if (!cached_playfabsCounter[playfab]) {
+      cached_playfabsCounter[playfab] = 1
+    } else {
+      cached_playfabsCounter[playfab] += 1
+    }
+  })
   
   const ipPromises = playfabs
+    .filter(function (playfab) {
+      // Skip throttling if this playfab has ben updated _once_, to avoid rubber banding issue
+      return cached_playfabsCounter[playfab] !== 2
+    })
     .map(async function ([playfab, ping]) {
       if (typeof cached_playfabToIp[playfab] === 'number') {
         return { ip: cached_playfabToIp[playfab], playfab, ping }
@@ -146,8 +159,9 @@ const deleteAllRulesWithLogging = function () {
   }).catch(function (err) {
     console.log('Error while wiping rules', err)
   })
-  
 }
+
+deleteAllRulesWithLogging()
 
 process.on("SIGINT", () => {
   console.log("Caught SIGINT. Exiting in 5 seconds.");
