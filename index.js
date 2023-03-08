@@ -140,6 +140,25 @@ setInterval(function () {
     })
 }, 5000)
 
+const deleteAllRulesWithLogging = function () {
+  return NetworkUtils.deleteAllRules().then(function () {
+    console.log('Wiped rules successfully')
+  }).catch(function (err) {
+    console.log('Error while wiping rules', err)
+  })
+  
+}
+
+process.on("SIGINT", () => {
+  console.log("Caught SIGINT. Exiting in 5 seconds.");
+  deleteAllRulesWithLogging()
+
+  setTimeout(() => {
+    console.log("This should appear in the Electron console but the process will be long killed.");
+    process.exit(0);
+  }, 5000);
+});
+
 
 
 // more stuff
