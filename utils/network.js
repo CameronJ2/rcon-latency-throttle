@@ -10,7 +10,7 @@ let cached_networkInterfaceId = null
 
 const getNetworkInterfaceId = async function () {
   if (!cached_networkInterfaceId) {
-    cached_networkInterfaceId = await promisifiedExec(`containerId=$(docker ps --format "{{.ID}} | {{.Names}}" | grep wine-dogs | awk '{ print $1 }') && interfaceId=$(docker exec -it "$containerId" cat /sys/class/net/eth0/iflink | sed 's/\\r$//') && ip ad | grep $interfaceId | awk '{ print $2 }' | awk -F@ '{ print $1 }'`)
+    cached_networkInterfaceId = await promisifiedExec(`containerId=$(docker ps --format "{{.ID}} | {{.Names}}" | grep wine-dogs | awk '{ print $1 }') && interfaceId=$(docker exec -i "$containerId" cat /sys/class/net/eth0/iflink | sed 's/\\r$//') && ip ad | grep $interfaceId | awk '{ print $2 }' | awk -F@ '{ print $1 }'`)
       .then(output => output.trim())
     console.log('GOT NETWORK ID', cached_networkInterfaceId)
   }
