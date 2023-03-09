@@ -151,7 +151,18 @@ const mainInterval = async function () {
   }
 
   const now = Date.now()
+  const myNum = await asyncFunctionThatResolvesWithNumber()
 
+  try {
+    await main()
+    const after = Date.now()
+    console.log(`Main took approximately ${after - now}ms`)
+  } catch (err) {
+    console.log('There was an error in main')
+    console.log(err)
+  } finally {
+    setTimeout(mainInterval, POLL_RATE)
+  }
   try {
     await main()
     const after = Date.now()
