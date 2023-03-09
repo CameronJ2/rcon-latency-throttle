@@ -68,6 +68,17 @@ const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
 
 /**
+ * Function that figures out if an IP needs to be parsed
+ * future optimization: System that counts times since last parse
+ */
+const shouldParseIp = function (playfab, ping) {
+  const ipIsCached =
+    Boolean(cached_playfabToIp[playfab]) && Boolean(cached_playfabToIp[playfab].length)
+  const pingNeedsToBeThrottled = ping < MIN_PING - 4
+  return !ipIsCached || pingNeedsToBeThrottled
+}
+
+/**
  * Main execution
  */
 const main = async function () {
@@ -81,18 +92,17 @@ const main = async function () {
   const playfabs = Object.entries(pingDictionary)
 
   const ipPromises = playfabs.map(async function ([playfab, ping]) {
-    if (typeof cached_playfabToIp[playfab] === 'number') {
+    if (!shouldIpBeParsed(playfab, ping)) {
       return { ip: cached_playfabToIp[playfab], playfab, ping }
     }
 
-    const now = Date.now()
-    const ipWithUnwantedCharacters = await promisifiedExec(
-      `grep ${playfab} Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+    const timeBeforeCreatingIpRule = Date.now()
+    const ip = await NetworkUtils.getPlayfabsIp(playfab)
+    const timeAfterCreatingIpRule = Date.now()
+    console.log(
+      `File parse took approximately ${timeAfterCreatingIpRule - timeBeforeCreatingIpRule}ms`
     )
-    const after = Date.now()
-    console.log(`File parse took approximately ${after - now}ms`)
 
-    const ip = ipWithUnwantedCharacters.replace('\n', '')
     cached_playfabToIp[playfab] = ip
 
     return { ip, playfab, ping }
@@ -100,7 +110,7 @@ const main = async function () {
 
   const playerInfoList = await Promise.all(ipPromises)
 
-  const beforeRules = Date.now()
+  const timeBeforeRules = Date.now()
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
@@ -129,31 +139,30 @@ const main = async function () {
   })
 
   await Promise.all(delayPromises)
-  console.log(`Rule adding/deleting took approximately ${Date.now() - beforeRules}ms`)
+  console.log(`Rule adding/deleting took approximately ${Date.now() - timeBeforeRules}ms`)
   console.log('All required players have been throttled')
 }
 
 let stopInterval = false
 
-const mainInterval = function () {
+const mainInterval = async function () {
   if (stopInterval) {
     return
   }
 
   const now = Date.now()
+  const myNum = await asyncFunctionThatResolvesWithNumber()
 
-  main()
-    .then(function () {
-      const after = Date.now()
-      console.log(`Main took approximately ${after - now}ms`)
-    })
-    .catch(function (err) {
-      console.log('There was an error in main')
-      console.log(err)
-    })
-    .finally(function () {
-      setTimeout(mainInterval, POLL_RATE)
-    })
+  try {
+    await main()
+    const after = Date.now()
+    console.log(`Main took approximately ${after - now}ms`)
+  } catch (err) {
+    console.log('There was an error in main')
+    console.log(err)
+  } finally {
+    setTimeout(mainInterval, POLL_RATE)
+  }
 }
 
 const deleteAllRulesWithLogging = function () {
