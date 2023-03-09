@@ -21,6 +21,13 @@ const getNetworkInterfaceId = async function () {
   return cached_networkInterfaceId
 }
 
+const getPlayfabsIp = async function (playfab) {
+  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1` 
+  const ipWithUnwantedCharacters = await promisifiedExec(command)
+  const ip = ipWithUnwantedCharacters.replace('\n', '')
+  return ip
+}
+
 const addOrChangeRule = async function (ip, amountOfDelayToAdd) {
   const networkInterfaceId = await getNetworkInterfaceId()
   const command = `tcset ${networkInterfaceId} --src-network ${ip}/32 --delay ${amountOfDelayToAdd}ms --change`
@@ -39,4 +46,6 @@ const deleteAllRules = async function () {
   return promisifiedExec(command)
 }
 
-module.exports = { addOrChangeRule, deleteRule, deleteAllRules }
+
+
+module.exports = { getPlayfabsIp, addOrChangeRule, deleteRule, deleteAllRules }
