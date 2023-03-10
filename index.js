@@ -74,6 +74,7 @@ const createPingDictionary = function (playerList) {
 
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
+const cached_ipsThrottled = new Set()
 
 /**
  * Function that figures out if an IP needs to be parsed
@@ -141,8 +142,10 @@ const main = async function () {
 
     if (newDelay > 0) {
       await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
-    } else {
+      cached_ipsThrottled.add(playerInfo.ip)
+    } else if (cached_ipsThrottled.has(playerInfo.ip)) {
       await NetworkUtils.deleteRule(playerInfo.ip)
+      cached_ipsThrottled.delete(playerInfo.ip)
     }
   })
 
