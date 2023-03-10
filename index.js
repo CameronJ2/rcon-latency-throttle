@@ -1,6 +1,8 @@
-const MIN_PING = 100
-const MAX_DELAY_ADDED = 50
-const POLL_RATE = 6000
+require('dotenv').config()
+
+const MIN_PING = process.env.MIN_PING ?? 52
+const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
+const POLL_RATE = process.env.POLL_RATE ?? 6000
 
 /**
  * 3 Steps to throttle
@@ -13,7 +15,6 @@ const POLL_RATE = 6000
  */
 
 const { Rcon } = require('rcon-client')
-const { promisifiedExec } = require('./utils/execPromise.js')
 const NetworkUtils = require('./utils/network.js')
 
 let cached_rcon = null
@@ -22,13 +23,20 @@ let cached_rcon = null
  * Create a function that connects to rcon and returns the rcon object - call this getRcon()
  */
 const getRcon = async function () {
+  const { RCON_HOST, RCON_PORT, RCON_PASSWORD } = process.env
+
+  if (!RCON_HOST || !RCON_PORT || !RCON_PASSWORD) {
+    throw new Error('Not all RCON environment variables have been set up')
+  }
+
   if (!cached_rcon) {
     cached_rcon = await Rcon.connect({
-      host: '192.187.124.138',
-      port: 45851,
-      password: 'mfcstatrconfighter'
+      host: process.env.RCON_HOST,
+      port: process.env.RCON_PORT,
+      password: process.env.RCON_PASSWORD
     })
   }
+
   return cached_rcon
 }
 
@@ -64,8 +72,6 @@ const createPingDictionary = function (playerList) {
   return dictionary
 }
 
-
-
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
 
@@ -74,8 +80,8 @@ const cached_playfabToLastDelay = {}
  * future optimization: System that counts times since last parse
  */
 const shouldParseIp = function (playfab, ping) {
-  const ipIsCached = Boolean(cached_playfabToIp[playfab]) 
-    && Boolean(cached_playfabToIp[playfab].length)
+  const ipIsCached =
+    Boolean(cached_playfabToIp[playfab]) && Boolean(cached_playfabToIp[playfab].length)
   const pingNeedsToBeThrottled = ping < MIN_PING - 4
   return !ipIsCached || pingNeedsToBeThrottled
 }
@@ -101,7 +107,9 @@ const main = async function () {
     const timeBeforeCreatingIpRule = Date.now()
     const ip = await NetworkUtils.getPlayfabsIp(playfab)
     const timeAfterCreatingIpRule = Date.now()
-    console.log(`File parse took approximately ${timeAfterCreatingIpRule - timeBeforeCreatingIpRule}ms`)
+    console.log(
+      `File parse took approximately ${timeAfterCreatingIpRule - timeBeforeCreatingIpRule}ms`
+    )
 
     cached_playfabToIp[playfab] = ip
 
@@ -151,7 +159,6 @@ const mainInterval = async function () {
   }
 
   const now = Date.now()
-  const myNum = await asyncFunctionThatResolvesWithNumber()
 
   try {
     await main()

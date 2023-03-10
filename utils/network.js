@@ -1,5 +1,3 @@
-const CONTAINER_NAME = 'wine-latest'
-
 /**
  * 1. Function that returns the network interface id (string)
  * 2. Function that adds a new rule
@@ -11,9 +9,13 @@ const { promisifiedExec } = require('./execPromise.js')
 let cached_networkInterfaceId = null
 
 const getNetworkInterfaceId = async function () {
+  if (!process.env.CONTAINER_NAME) {
+    throw new Error('Must specify CONTAINER_NAME as environment variable')
+  }
+
   if (!cached_networkInterfaceId) {
     cached_networkInterfaceId = await promisifiedExec(
-      `containerId=$(docker ps --format "{{.ID}} | {{.Names}}" | grep ${CONTAINER_NAME} | awk '{ print $1 }') && interfaceId=$(docker exec -i "$containerId" cat /sys/class/net/eth0/iflink | sed 's/\\r$//') && ip ad | grep $interfaceId | awk '{ print $2 }' | awk -F@ '{ print $1 }' | grep veth`
+      `containerId=$(docker ps --format "{{.ID}} | {{.Names}}" | grep ${prcess.env.CONTAINER_NAME} | awk '{ print $1 }') && interfaceId=$(docker exec -i "$containerId" cat /sys/class/net/eth0/iflink | sed 's/\\r$//') && ip ad | grep $interfaceId | awk '{ print $2 }' | awk -F@ '{ print $1 }' | grep veth`
     ).then(output => output.trim())
     console.log('GOT NETWORK ID', cached_networkInterfaceId)
   }
@@ -22,7 +24,7 @@ const getNetworkInterfaceId = async function () {
 }
 
 const getPlayfabsIp = async function (playfab) {
-  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1` 
+  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
   const ipWithUnwantedCharacters = await promisifiedExec(command)
   const ip = ipWithUnwantedCharacters.replace('\n', '')
   return ip
@@ -45,7 +47,5 @@ const deleteAllRules = async function () {
   const command = `tcdel ${networkInterfaceId} --all`
   return promisifiedExec(command)
 }
-
-
 
 module.exports = { getPlayfabsIp, addOrChangeRule, deleteRule, deleteAllRules }

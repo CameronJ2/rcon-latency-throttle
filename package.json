@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/CameronJ2/rcon-latency-throttle#readme",
   "dependencies": {
+    "dotenv": "^16.0.3",
     "rcon-client": "^4.2.3"
   }
 }
