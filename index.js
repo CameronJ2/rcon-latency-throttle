@@ -65,6 +65,12 @@ const createPingDictionary = function (playerList) {
     const splitItems = playerLine.split(',')
     const playfab = splitItems[0]
     const ping = splitItems[2]
+
+    if (!ping) {
+      // Player is a bot
+      return
+    }
+
     const pingAsNum = Number.parseInt(ping.trim().split(' ')[0])
     dictionary[playfab] = pingAsNum
   })
