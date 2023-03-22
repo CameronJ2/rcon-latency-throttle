@@ -1,4 +1,4 @@
-const timeProfiler = require('./utils/timeProfiler')
+const timeProfiler = require('./timeProfiler')
 
 const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
