@@ -18,7 +18,7 @@ const shouldParseIp = function (playfab, ping) {
 /**
  * Function that gets the playerlist from the rcon object. Return the playerlist
  */
-module.exports.getPlayerList = async function (rcon) {
+const getPlayerList = async function (rcon) {
   return rcon.send('playerlist')
 }
 
@@ -29,7 +29,7 @@ module.exports.getPlayerList = async function (rcon) {
  *    'DreamsPlayfab': 44
  *  }
  */
-module.exports.createPingDictionary = function (playerList) {
+const createPingDictionary = function (playerList) {
   if (playerList.includes('There are currently no players present')) {
     return {}
   }
