@@ -10,18 +10,18 @@ const POLL_RATE = process.env.POLL_RATE ?? 6000
  * [x] Acquire IP by playfab
  *   - Find the most recent game log file
  *   - Parse file, use the play fab to find the IP
- * [] Add a traffic control rule to delay packets if necessary
- * [] Add polling
+ * [x] Add a traffic control rule to delay packets if necessary
+ * [x] Add polling
  */
 
 const { Rcon } = require('rcon-client')
 const NetworkUtils = require('./utils/network.js')
-
-let cached_rcon = null
+const timeProfiler = require('./utils/timeProfiler')
 
 /**
- * Create a function that connects to rcon and returns the rcon object - call this getRcon()
+ * Function that connects to rcon and returns the rcon object
  */
+let cached_rcon = null
 const getRcon = async function () {
   const { RCON_HOST, RCON_PORT, RCON_PASSWORD } = process.env
 
@@ -41,8 +41,7 @@ const getRcon = async function () {
 }
 
 /**
- * Create a function that gets the playerlist from the rcon object. Return the playerlist
- * This function should take an rcon object as an argument
+ * Function that gets the playerlist from the rcon object. Return the playerlist
  */
 const getPlayerList = async function (rcon) {
   return rcon.send('playerlist')
@@ -50,6 +49,10 @@ const getPlayerList = async function (rcon) {
 
 /**
  * Function that takes a playerlist, returns a dictionary of playfabs to pings
+ * ie:
+ *  {
+ *    'DreamsPlayfab': 44
+ *  }
  */
 const createPingDictionary = function (playerList) {
   if (playerList.includes('There are currently no players present')) {
@@ -66,7 +69,7 @@ const createPingDictionary = function (playerList) {
     const playfab = splitItems[0]
     const ping = splitItems[2]
 
-    if (!ping) {
+    if (ping === undefined) {
       // Player is a bot
       return
     }
@@ -80,11 +83,9 @@ const createPingDictionary = function (playerList) {
 
 const cached_playfabToIp = {}
 const cached_playfabToLastDelay = {}
-const cached_ipsThrottled = new Set()
 
 /**
  * Function that figures out if an IP needs to be parsed
- * future optimization: System that counts times since last parse
  */
 const shouldParseIp = function (playfab, ping) {
   const ipIsCached =
@@ -99,64 +100,64 @@ const shouldParseIp = function (playfab, ping) {
 const main = async function () {
   const rcon = await getRcon()
 
-  const beforePlayerList = Date.now()
-  const playerList = await getPlayerList(rcon)
-  console.log(`Rcon player list took approximately ${Date.now() - beforePlayerList}ms`)
+  const playerList = await timeProfiler('Rcon player list', function () {
+    return getPlayerList(rcon)
+  })
 
   const pingDictionary = createPingDictionary(playerList)
   const playfabs = Object.entries(pingDictionary)
+  // [[playfab, ping], [playfab, ping]]
 
   const ipPromises = playfabs.map(async function ([playfab, ping]) {
     if (!shouldParseIp(playfab, ping)) {
       return { ip: cached_playfabToIp[playfab], playfab, ping }
     }
 
-    const timeBeforeCreatingIpRule = Date.now()
-    const ip = await NetworkUtils.getPlayfabsIp(playfab)
-    const timeAfterCreatingIpRule = Date.now()
-    console.log(
-      `File parse took approximately ${timeAfterCreatingIpRule - timeBeforeCreatingIpRule}ms`
-    )
+    const ip = await timeProfiler('File parse', function () {
+      return NetworkUtils.getPlayfabsIp(playfab)
+    })
 
     cached_playfabToIp[playfab] = ip
-
     return { ip, playfab, ping }
   })
 
+  // [{ 'DreamsPlayfab': 'kj251jk512', ip: '111.111.111.11', ping: 50 }]
   const playerInfoList = await Promise.all(ipPromises)
 
-  const timeBeforeRules = Date.now()
+  await timeProfiler('Rule adding/deleting', function () {
+    const ipsThrottled = new Set()
 
-  // For each ip, check if their ping is under minimum. If so, create a traffic rule
-  const delayPromises = playerInfoList.map(async function (playerInfo) {
-    const currentDelay = cached_playfabToLastDelay[playerInfo.playfab] ?? 0
-    const delayToAdd =
-      playerInfo.ping > 0
-        ? Math.min(Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
-        : 0
-    const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
+    // For each ip, check if their ping is under minimum. If so, create a traffic rule
+    const delayPromises = playerInfoList.map(async function (playerInfo) {
+      const currentDelay = cached_playfabToLastDelay[playerInfo.playfab] ?? 0
+      const delayToAdd =
+        playerInfo.ping > 0
+          ? Math.min(Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
+          : 0
+      const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
 
-    console.log({
-      ip: playerInfo.ip,
-      playfab: playerInfo.playfab,
-      rconPing: playerInfo.ping,
-      currentDelay,
-      newDelay
+      console.log({
+        ip: playerInfo.ip,
+        playfab: playerInfo.playfab,
+        rconPing: playerInfo.ping,
+        currentDelay,
+        newDelay
+      })
+
+      cached_playfabToLastDelay[playerInfo.playfab] = newDelay
+
+      if (newDelay > 0) {
+        await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
+        ipsThrottled.add(playerInfo.ip)
+      } else if (ipsThrottled.has(playerInfo.ip)) {
+        await NetworkUtils.deleteRule(playerInfo.ip)
+        ipsThrottled.delete(playerInfo.ip)
+      }
     })
 
-    cached_playfabToLastDelay[playerInfo.playfab] = newDelay
-
-    if (newDelay > 0) {
-      await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
-      cached_ipsThrottled.add(playerInfo.ip)
-    } else if (cached_ipsThrottled.has(playerInfo.ip)) {
-      await NetworkUtils.deleteRule(playerInfo.ip)
-      cached_ipsThrottled.delete(playerInfo.ip)
-    }
+    return Promise.all(delayPromises)
   })
 
-  await Promise.all(delayPromises)
-  console.log(`Rule adding/deleting took approximately ${Date.now() - timeBeforeRules}ms`)
   console.log('All required players have been throttled')
 }
 
@@ -167,12 +168,8 @@ const mainInterval = async function () {
     return
   }
 
-  const now = Date.now()
-
   try {
-    await main()
-    const after = Date.now()
-    console.log(`Main took approximately ${after - now}ms`)
+    await timeProfiler('Main', main)
   } catch (err) {
     console.log('There was an error in main')
     console.log(err)
