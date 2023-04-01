@@ -143,6 +143,8 @@ module.exports = async function (rcon) {
         return queueItem.ip === playerInfo.ip
       })
 
+      console.log({ indexOfItemInQueue, trafficRuleInfo, queue: queue.queue })
+
       if (indexOfItemInQueue === -1) {
         console.log('ENQUEUEING', { trafficRuleInfo, queue: queue.queue })
         queue.enqueue(trafficRuleInfo)
