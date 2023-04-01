@@ -15,6 +15,10 @@ class Queue {
     return output
   }
 
+  size() {
+    return this.queue.length
+  }
+
   findItemIndex(callbackToIndicateCurrentIndexIsDesired) {
     for (let i = 0; i < this.queue; i += 1) {
       if (callbackToIndicateCurrentIndexIsDesired(this.queue[i])) {
