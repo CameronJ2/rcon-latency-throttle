@@ -20,7 +20,7 @@ class Queue {
   }
 
   findItemIndex(callbackToIndicateCurrentIndexIsDesired) {
-    for (let i = 0; i < this.queue; i += 1) {
+    for (let i = 0; i < this.queue.length; i += 1) {
       if (callbackToIndicateCurrentIndexIsDesired(this.queue[i])) {
         return i
       }
