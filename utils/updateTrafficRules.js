@@ -1,5 +1,6 @@
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
+const Queue = require('./Queue')
 
 const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
@@ -87,12 +88,26 @@ const getPlayerInfoList = async function (rcon) {
   return Promise.all(promises)
 }
 
+const queue = new Queue()
+const ipsThrottled = new Set()
+
+// Interval that changes traffic rule for single item in queue
+setInterval(async function () {
+  const trafficRuleInfo = queue.dequeue()
+
+  if (trafficRuleInfo.delay > 0) {
+    await NetworkUtils.addOrChangeRule(trafficRuleInfo.ip, trafficRuleInfo.delay)
+  } else if (ipsThrottled.has(trafficRuleInfo.ip)) {
+    await NetworkUtils.deleteRule(playerInfo.ip)
+    ipsThrottled.delete(trafficRuleInfo.ip)
+  }
+}, 5000)
+
 /**
  * Creates/deletes traffic rules depending on logic for each player
  * @param {rcon} - rcon object
  */
 module.exports = async function (rcon) {
-  const ipsThrottled = new Set()
   const playerInfoList = await getPlayerInfoList(rcon)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
@@ -114,12 +129,19 @@ module.exports = async function (rcon) {
 
     PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
 
+    // Add the info for traffic rule change to the queue
+    const trafficRuleInfo = { ip: playerInfo.ip, delay: newDelay }
+
     if (newDelay > 0) {
-      await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
-      ipsThrottled.add(playerInfo.ip)
-    } else if (ipsThrottled.has(playerInfo.ip)) {
-      await NetworkUtils.deleteRule(playerInfo.ip)
-      ipsThrottled.delete(playerInfo.ip)
+      const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
+        return queueItem.ip === playerInfo.ip
+      })
+
+      if (indexOfItemInQueue === -1) {
+        queue.enqueue(trafficRuleInfo)
+      } else {
+        queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
+      }
     }
   })
 
