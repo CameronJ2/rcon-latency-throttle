@@ -148,12 +148,14 @@ module.exports = async function (rcon) {
       console.log({ indexOfItemInQueue, trafficRuleInfo, queue: queue.queue })
 
       if (indexOfItemInQueue === -1) {
-        console.log('ENQUEUEING', { trafficRuleInfo, queue: queue.queue })
+        console.log('ENQUEUEING')
         queue.enqueue(trafficRuleInfo)
       } else {
-        console.log('UPDATING', { trafficRuleInfo, queue: queue.queue })
+        console.log('UPDATING')
         queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
       }
+
+      console.log('**********')
     }
   })
 
