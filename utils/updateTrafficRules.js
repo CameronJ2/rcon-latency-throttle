@@ -91,9 +91,11 @@ const getPlayerInfoList = async function (rcon) {
 const queue = new Queue()
 const ipsThrottled = new Set()
 
+let isRunning = false
+
 // Interval that changes traffic rule for single item in queue
 setInterval(async function () {
-  if (queue.size() <= 0) {
+  if ((isRunning === true) | (queue.size() <= 0)) {
     return
   }
 
@@ -106,8 +108,9 @@ setInterval(async function () {
     ipsThrottled.delete(trafficRuleInfo.ip)
   }
 
+  isRunning = false
   console.log({ trafficRuleInfoUpdated: trafficRuleInfo, newQueue: queue.queue })
-}, 5000)
+}, 1000)
 
 /**
  * Creates/deletes traffic rules depending on logic for each player
