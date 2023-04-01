@@ -105,6 +105,8 @@ setInterval(async function () {
     await NetworkUtils.deleteRule(playerInfo.ip)
     ipsThrottled.delete(trafficRuleInfo.ip)
   }
+
+  console.log({ trafficRuleInfoUpdated: trafficRuleInfo, newQueue: queue.queue })
 }, 5000)
 
 /**
@@ -142,8 +144,10 @@ module.exports = async function (rcon) {
       })
 
       if (indexOfItemInQueue === -1) {
+        console.log('ENQUEUEING', { trafficRuleInfo, queue: queue.queue })
         queue.enqueue(trafficRuleInfo)
       } else {
+        console.log('UPDATING', { trafficRuleInfo, queue: queue.queue })
         queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
       }
     }
