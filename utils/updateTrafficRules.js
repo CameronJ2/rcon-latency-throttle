@@ -93,6 +93,10 @@ const ipsThrottled = new Set()
 
 // Interval that changes traffic rule for single item in queue
 setInterval(async function () {
+  if (queue.size() <= 0) {
+    return
+  }
+
   const trafficRuleInfo = queue.dequeue()
 
   if (trafficRuleInfo.delay > 0) {
