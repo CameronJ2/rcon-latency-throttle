@@ -138,6 +138,8 @@ module.exports = async function (rcon) {
     // Add the info for traffic rule change to the queue
     const trafficRuleInfo = { ip: playerInfo.ip, delay: newDelay }
 
+    console.log({ newDelay })
+
     if (newDelay > 0) {
       const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
         return queueItem.ip === playerInfo.ip
