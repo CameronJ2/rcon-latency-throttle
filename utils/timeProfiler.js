@@ -1,6 +1,6 @@
-module.exports = async function (name, callback) {
+module.exports = async function (description, callback) {
   const beforeCallback = Date.now()
   const output = await callback()
-  console.log(`${name} took approximately ${Date.now() - beforeCallback}ms`)
+  console.log(`${description} took approximately ${Date.now() - beforeCallback}ms`)
   return output
 }

@@ -4,26 +4,40 @@ const POLL_RATE = process.env.POLL_RATE ?? 6000
 
 const getRcon = require('./utils/getRcon')
 const NetworkUtils = require('./utils/network.js')
+const Queue = require('./utils/Queue')
 const timeProfiler = require('./utils/timeProfiler')
-const updateTrafficRules = require('./utils/updateTrafficRules')
+const getTrafficRuleUpdates = require('./utils/getTrafficRuleUpdates')
 
+const queue = new Queue()
 /**
  * Main execution
  */
 const main = async function () {
+  // Main takes care of adding/updating items in the queue
   const rcon = await getRcon()
 
-  await timeProfiler('Rule adding/deleting', function () {
-    return updateTrafficRules(rcon)
-  })
+  await timeProfiler('Rule adding/deleting', async function () {
+    const trafficRuleUpdates = await getTrafficRuleUpdates(rcon)
 
-  console.log('All required players have been throttled')
+    // Iterate through trafficRuleUpdates and add or update the queue
+    trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {
+      const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
+        return queueItem.ip === trafficRuleUpdate.ip
+      })
+
+      if (indexOfItemInQueue === -1) {
+        queue.enqueue(trafficRuleInfo)
+      } else {
+        queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
+      }
+    })
+  })
 }
 
-let stopInterval = false
+let hasProgramTerminated = false
 
 const mainInterval = async function () {
-  if (stopInterval) {
+  if (hasProgramTerminated) {
     return
   }
 
@@ -34,6 +48,35 @@ const mainInterval = async function () {
     console.log(err)
   } finally {
     setTimeout(mainInterval, POLL_RATE)
+  }
+}
+
+const ipsThrottled = new Set()
+
+const dequeueItemAndUpdateNetwork = async function () {
+  const trafficRuleInfo = queue.dequeue()
+
+  if (trafficRuleInfo.delay > 0) {
+    await NetworkUtils.addOrChangeRule(trafficRuleInfo.ip, trafficRuleInfo.delay)
+    ipsThrottled.add(trafficRuleInfo.ip)
+  } else if (ipsThrottled.has(trafficRuleInfo.ip)) {
+    await NetworkUtils.deleteRule(playerInfo.ip)
+    ipsThrottled.delete(trafficRuleInfo.ip)
+  }
+}
+
+const networkUpdateInterval = async function () {
+  if (hasProgramTerminated) {
+    return
+  }
+
+  try {
+    await timeProfiler('Updating network item in queue', dequeueItemAndUpdateNetwork)
+  } catch (err) {
+    console.log('There was an error updating a network item')
+    console.log(err)
+  } finally {
+    setTimeout(networkUpdateInterval, 1000)
   }
 }
 
@@ -57,7 +100,7 @@ startupProcesses()
 
 process.on('SIGINT', () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
-  stopInterval = true
+  hasProgramTerminated = true
 
   setTimeout(async function () {
     await deleteAllRulesWithLogging()

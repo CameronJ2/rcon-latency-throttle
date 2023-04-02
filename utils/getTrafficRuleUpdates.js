@@ -88,35 +88,11 @@ const getPlayerInfoList = async function (rcon) {
   return Promise.all(promises)
 }
 
-const queue = new Queue()
-const ipsThrottled = new Set()
-
-let isRunning = false
-
-// Interval that changes traffic rule for single item in queue
-setInterval(async function () {
-  if ((isRunning === true) | (queue.size() <= 0)) {
-    return
-  }
-
-  const trafficRuleInfo = queue.dequeue()
-
-  if (trafficRuleInfo.delay > 0) {
-    await NetworkUtils.addOrChangeRule(trafficRuleInfo.ip, trafficRuleInfo.delay)
-  } else if (ipsThrottled.has(trafficRuleInfo.ip)) {
-    await NetworkUtils.deleteRule(playerInfo.ip)
-    ipsThrottled.delete(trafficRuleInfo.ip)
-  }
-
-  isRunning = false
-  console.log({ trafficRuleInfoUpdated: trafficRuleInfo, newQueue: queue.queue })
-}, 1000)
-
 /**
  * Creates/deletes traffic rules depending on logic for each player
  * @param {rcon} - rcon object
  */
-module.exports = async function (rcon) {
+const getTrafficRuleUpdates = async function (rcon) {
   const playerInfoList = await getPlayerInfoList(rcon)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
@@ -138,29 +114,16 @@ module.exports = async function (rcon) {
 
     PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
 
-    // Add the info for traffic rule change to the queue
-    const trafficRuleInfo = { ip: playerInfo.ip, delay: newDelay }
-
-    console.log({ newDelay })
-
     if (newDelay > 0) {
-      const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
-        return queueItem.ip === playerInfo.ip
-      })
-
-      console.log({ indexOfItemInQueue, trafficRuleInfo, queue: queue.queue })
-
-      if (indexOfItemInQueue === -1) {
-        console.log('ENQUEUEING')
-        queue.enqueue(trafficRuleInfo)
-      } else {
-        console.log('UPDATING')
-        queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
-      }
-
-      console.log('**********')
+      return { ip: playerInfo.ip, delay: newDelay }
     }
   })
 
-  return Promise.all(delayPromises)
+  const trafficRuleUpdates = await Promise.all(delayPromises)
+
+  return trafficRuleUpdates.filter(function (trafficRuleUpdate) {
+    return trafficRuleUpdate !== undefined
+  })
 }
+
+module.exports = getTrafficRuleUpdates
