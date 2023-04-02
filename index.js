@@ -19,6 +19,8 @@ const main = async function () {
   await timeProfiler('Rule adding/deleting', async function () {
     const trafficRuleUpdates = await getTrafficRuleUpdates(rcon)
 
+    console.log({ trafficRuleUpdates })
+
     // Iterate through trafficRuleUpdates and add or update the queue
     trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {
       const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
