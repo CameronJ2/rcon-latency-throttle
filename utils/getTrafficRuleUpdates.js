@@ -104,19 +104,16 @@ const getTrafficRuleUpdates = async function (rcon) {
         : 0
     const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
 
-    console.log({
-      ip: playerInfo.ip,
-      playfab: playerInfo.playfab,
-      rconPing: playerInfo.ping,
-      currentDelay,
-      newDelay
-    })
+    // console.log({
+    //   ip: playerInfo.ip,
+    //   playfab: playerInfo.playfab,
+    //   rconPing: playerInfo.ping,
+    //   currentDelay,
+    //   newDelay
+    // })
 
     PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
 
-    if (currentDelay === newDelay) {
-      console.log('CURRENT DELAY EQUAL NEW DELAY')
-    }
     if (newDelay > 0 && currentDelay !== newDelay) {
       return { ip: playerInfo.ip, delay: newDelay }
     }

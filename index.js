@@ -54,15 +54,7 @@ const mainInterval = async function () {
 const ipsThrottled = new Set()
 
 const dequeueItemAndUpdateNetwork = async function () {
-  if (queue.size() === 0) {
-    return
-  }
-
   const trafficRuleInfo = queue.dequeue()
-
-  console.log('******************************')
-  console.log('UPDATING TRAFFIC RULE')
-  console.log({ trafficRuleInfo })
 
   if (trafficRuleInfo.delay > 0) {
     await NetworkUtils.addOrChangeRule(trafficRuleInfo.ip, trafficRuleInfo.delay)
@@ -79,7 +71,9 @@ const networkUpdateInterval = async function () {
   }
 
   try {
-    await timeProfiler('Updating network item in queue', dequeueItemAndUpdateNetwork)
+    if (queue.size() > 0) {
+      await timeProfiler('Updating network item in queue', dequeueItemAndUpdateNetwork)
+    }
   } catch (err) {
     console.log('There was an error updating a network item')
     console.log(err)
