@@ -93,6 +93,7 @@ const startupProcesses = async function () {
   })
 
   mainInterval()
+  networkUpdateInterval()
   console.log('hello!')
 }
 
