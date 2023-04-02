@@ -28,7 +28,7 @@ const main = async function () {
       if (indexOfItemInQueue === -1) {
         queue.enqueue(trafficRuleUpdate)
       } else {
-        queue.updateIndex(indexOfItemInQueue, trafficRuleInfo)
+        queue.updateIndex(indexOfItemInQueue, trafficRuleUpdate)
       }
     })
   })
