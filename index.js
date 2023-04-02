@@ -60,6 +60,10 @@ const dequeueItemAndUpdateNetwork = async function () {
 
   const trafficRuleInfo = queue.dequeue()
 
+  console.log('******************************')
+  console.log('UPDATING TRAFFIC RULE')
+  console.log({ trafficRuleInfo })
+
   if (trafficRuleInfo.delay > 0) {
     await NetworkUtils.addOrChangeRule(trafficRuleInfo.ip, trafficRuleInfo.delay)
     ipsThrottled.add(trafficRuleInfo.ip)
