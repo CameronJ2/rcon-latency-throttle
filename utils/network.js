@@ -23,11 +23,36 @@ const getNetworkInterfaceId = async function () {
   return cached_networkInterfaceId
 }
 
-const getPlayfabsIp = async function (playfab) {
-  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ../Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
-  const ipWithUnwantedCharacters = await promisifiedExec(command)
-  const ip = ipWithUnwantedCharacters.replace('\n', '')
-  return ip
+// const getPlayfabsIp = async function (playfab) {
+//   const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ../Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+//   const ipWithUnwantedCharacters = await promisifiedExec(command)
+//   const ip = ipWithUnwantedCharacters.replace('\n', '')
+//   return ip
+// }
+
+/**
+ * Returns a dictionary of playfabs to ips
+ * { AA6380B4A04CCA37: '184.98.28.14' }
+ */
+const getAllPlayfabIps = async function () {
+  // grep -o 'RemoteAddr: [0-9\.]\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \([0-9\.]\+\).*MordhauOnlineSubsystem:\([^ ,[:space:]]*\).*/\1 \2/' | sort -u
+  const command = `grep -o 'RemoteAddr: [0-9\\.]\\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \\([0-9\\.]\\+\\).*MordhauOnlineSubsystem:\\([^ ,[:space:]]*\\).*/\\1 \\2/' | sort -u`
+  const ipsAndPlayfabsString = await promisifiedExec(command)
+  const splitByLine = ipsAndPlayfabsString.split('\n')
+
+  const output = {}
+
+  splitByLine
+    .filter(line => typeof line === 'string' && line.trim().length > 0)
+    .forEach(function (line) {
+      const [ip, playfab] = line.split(' ')
+
+      if (!output[playfab]) {
+        output[playfab] = ip
+      }
+    })
+
+  return output
 }
 
 const addOrChangeRule = async function (ip, amountOfDelayToAdd) {
@@ -48,4 +73,4 @@ const deleteAllRules = async function () {
   return promisifiedExec(command)
 }
 
-module.exports = { getPlayfabsIp, addOrChangeRule, deleteRule, deleteAllRules }
+module.exports = { getPlayfabsIp, getAllPlayfabIps, addOrChangeRule, deleteRule, deleteAllRules }

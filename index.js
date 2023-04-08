@@ -97,6 +97,7 @@ const startupProcesses = async function () {
   mainInterval()
   networkUpdateInterval()
   console.log('hello!')
+  console.log('getAllPlayfabIps:', NetworkUtils.getAllPlayfabIps())
 }
 
 startupProcesses()
