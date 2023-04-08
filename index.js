@@ -19,6 +19,7 @@ const dequeueItemAndUpdateNetwork = async function () {
 }
 
 let hasProgramTerminated = false
+const queue = new Queue()
 
 const networkUpdateInterval = async function () {
   if (hasProgramTerminated) {
@@ -49,7 +50,7 @@ const startupProcesses = async function () {
     process.exit()
   })
 
-  startMainInterval(process.env.POLL_RATE)
+  startMainInterval(process.env.POLL_RATE, queue)
   networkUpdateInterval()
 
   console.log('hello!')
