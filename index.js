@@ -3,6 +3,7 @@ require('dotenv').config()
 const NetworkUtils = require('./utils/network.js')
 const timeProfiler = require('./utils/timeProfiler')
 const { startMainInterval, terminate } = require('./intervals/main')
+const Queue = require('./utils/Queue')
 
 const ipsThrottled = new Set()
 
