@@ -23,12 +23,12 @@ const getNetworkInterfaceId = async function () {
   return cached_networkInterfaceId
 }
 
-// const getPlayfabsIp = async function (playfab) {
-//   const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ../Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
-//   const ipWithUnwantedCharacters = await promisifiedExec(command)
-//   const ip = ipWithUnwantedCharacters.replace('\n', '')
-//   return ip
-// }
+const getPlayfabsIp = async function (playfab) {
+  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ../Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+  const ipWithUnwantedCharacters = await promisifiedExec(command)
+  const ip = ipWithUnwantedCharacters.replace('\n', '')
+  return ip
+}
 
 /**
  * Returns a dictionary of playfabs to ips
