@@ -18,7 +18,6 @@ const startupProcesses = async function () {
 
   mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
-  networkUpdateInterval()
 
   console.log('hello!')
   const testLog = await NetworkUtils.getAllPlayfabIps()
