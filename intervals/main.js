@@ -1,10 +1,11 @@
 const getRcon = require('../utils/getRcon')
 const timeProfiler = require('../utils/timeProfiler')
 const getTrafficRuleUpdates = require('../utils/getTrafficRuleUpdates')
+const { queue: trafficRuleQueue } = require('./trafficRule')
 
 let hasProgramTerminated = false
 
-const main = async function (trafficRuleUpdateQueue) {
+const main = async function () {
   // Main takes care of adding/updating items in the queue
   const rcon = await getRcon()
 
@@ -13,31 +14,31 @@ const main = async function (trafficRuleUpdateQueue) {
 
     // Iterate through trafficRuleUpdates and add or update the queue
     trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {
-      const indexOfItemInQueue = trafficRuleUpdateQueue.findItemIndex(function (queueItem) {
+      const indexOfItemInQueue = trafficRuleQueue.findItemIndex(function (queueItem) {
         return queueItem.ip === trafficRuleUpdate.ip
       })
 
       if (indexOfItemInQueue === -1) {
-        trafficRuleUpdateQueue.enqueue(trafficRuleUpdate)
+        trafficRuleQueue.enqueue(trafficRuleUpdate)
       } else {
-        trafficRuleUpdateQueue.updateIndex(indexOfItemInQueue, trafficRuleUpdate)
+        trafficRuleQueue.updateIndex(indexOfItemInQueue, trafficRuleUpdate)
       }
     })
   })
 }
 
-const startMainInterval = async function (POLL_RATE = 10000, trafficRuleUpdateQueue) {
+const start = async function (POLL_RATE = 10000) {
   if (hasProgramTerminated) {
     return
   }
 
   try {
-    await timeProfiler('Main', () => main(trafficRuleUpdateQueue))
+    await timeProfiler('Main', main)
   } catch (err) {
     console.log('There was an error in main')
     console.log(err)
   } finally {
-    setTimeout(() => startMainInterval(POLL_RATE, trafficRuleUpdateQueue), POLL_RATE)
+    setTimeout(() => start(POLL_RATE), POLL_RATE)
   }
 }
 
@@ -45,4 +46,4 @@ const terminate = function () {
   hasProgramTerminated = true
 }
 
-module.exports = { startMainInterval, terminate }
+module.exports = { start, terminate }
