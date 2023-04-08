@@ -1,19 +1,19 @@
+// grep -o 'RemoteAddr: [0-9\.]\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \([0-9\.]\+\).*MordhauOnlineSubsystem:\([^ ,[:space:]]*\).*/\1 \2/' | sort -u
+
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
 
 const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
-const PLAYFAB_TO_IP_CACHE = {}
-const PLAYFAB_TO_LAST_DELAY_CACHE = {}
+const cache_playfabToIp = {}
+const cache_playfabToLastDelay = {}
 
 /**
  * Function that figures out if an IP needs to be parsed
  */
-const shouldParseIp = function (playfab, ping) {
-  const ipIsCached = Boolean(PLAYFAB_TO_IP_CACHE[playfab] && PLAYFAB_TO_IP_CACHE[playfab].length)
-  const pingNeedsToBeThrottled = ping < MIN_PING - 4
-  return !ipIsCached || pingNeedsToBeThrottled
+const shouldParseIp = function (ping, minPing = MIN_PING) {
+  return ping < minPing - 4
 }
 
 /**
@@ -72,15 +72,17 @@ const getPlayerInfoList = async function (rcon) {
   const entries = Object.entries(pingDictionary)
 
   const promises = entries.map(async function ([playfab, ping]) {
-    if (!shouldParseIp(playfab, ping)) {
-      return { ip: PLAYFAB_TO_IP_CACHE[playfab], playfab, ping }
+    const cachedIp = cache_playfabToIp[playfab]
+
+    if (cachedIp?.length && !shouldParseIp(playfab, ping)) {
+      return { ip: cachedIp, playfab, ping }
     }
 
     const ip = await timeProfiler('File parse', function () {
       return NetworkUtils.getPlayfabsIp(playfab)
     })
 
-    PLAYFAB_TO_IP_CACHE[playfab] = ip
+    cache_playfabToIp[playfab] = ip
     return { ip, playfab, ping }
   })
 
@@ -96,7 +98,7 @@ const getTrafficRuleUpdates = async function (rcon) {
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
   const delayPromises = playerInfoList.map(async function (playerInfo) {
-    const currentDelay = PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] ?? 0
+    const currentDelay = cache_playfabToLastDelay[playerInfo.playfab] ?? 0
     const delayToAdd =
       playerInfo.ping > 0
         ? Math.min(Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
@@ -111,7 +113,7 @@ const getTrafficRuleUpdates = async function (rcon) {
     //   newDelay
     // })
 
-    PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
+    cache_playfabToLastDelay[playerInfo.playfab] = newDelay
 
     if (newDelay > 0 && currentDelay !== newDelay) {
       return { ip: playerInfo.ip, delay: newDelay }
