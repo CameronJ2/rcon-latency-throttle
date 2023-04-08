@@ -42,4 +42,4 @@ const terminate = function () {
   hasProgramTerminated = true
 }
 
-export { start, queue }
+module.exports = { start, terminate, queue }
