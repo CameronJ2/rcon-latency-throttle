@@ -1,7 +1,7 @@
-const getRcon = require('./utils/getRcon')
-const Queue = require('./utils/Queue')
-const timeProfiler = require('./utils/timeProfiler')
-const getTrafficRuleUpdates = require('./utils/getTrafficRuleUpdates')
+const getRcon = require('../utils/getRcon')
+const Queue = require('../utils/Queue')
+const timeProfiler = require('../utils/timeProfiler')
+const getTrafficRuleUpdates = require('../utils/getTrafficRuleUpdates')
 
 const queue = new Queue()
 let hasProgramTerminated = false
