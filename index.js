@@ -16,7 +16,7 @@ const startupProcesses = async function () {
     process.exit()
   })
 
-  mainInterval.start(process.env.POLL_RATE, queue)
+  mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
   networkUpdateInterval()
 
