@@ -32,14 +32,12 @@ const startMainInterval = async function (POLL_RATE = 10000, trafficRuleUpdateQu
   }
 
   try {
-    await timeProfiler('Main', function () {
-      main(trafficRuleUpdateQueue)
-    })
+    await timeProfiler('Main', () => main(trafficRuleUpdateQueue))
   } catch (err) {
     console.log('There was an error in main')
     console.log(err)
   } finally {
-    setTimeout(startMainInterval, POLL_RATE)
+    setTimeout(() => startMainInterval(POLL_RATE, trafficRuleUpdateQueue), POLL_RATE)
   }
 }
 
