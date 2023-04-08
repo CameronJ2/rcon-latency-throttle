@@ -2,19 +2,13 @@
 
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
+const { getPlayfabsToIps } = require('../intervals/ip')
 
 const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
 const cache_playfabToIp = {}
 const cache_playfabToLastDelay = {}
-
-/**
- * Function that figures out if an IP needs to be parsed
- */
-const shouldParseIp = function (ping, minPing = MIN_PING) {
-  return ping < minPing - 4
-}
 
 /**
  * Function that gets the playerlist from the rcon object. Return the playerlist
@@ -68,25 +62,22 @@ const getPlayerInfoList = async function (rcon) {
   })
 
   const pingDictionary = createPingDictionary(playerList)
-
   const entries = Object.entries(pingDictionary)
+  const playfabsToIps = await getPlayfabsToIps()
 
   const promises = entries.map(async function ([playfab, ping]) {
-    const cachedIp = cache_playfabToIp[playfab]
+    const ip = playfabsToIps[playfab]
 
-    if (cachedIp?.length && !shouldParseIp(playfab, ping)) {
-      return { ip: cachedIp, playfab, ping }
+    if (!ip || !ip.length) {
+      console.log(`Tried to throttle playfab ${playfab} but did not have IP`)
+      return
     }
 
-    const ip = await timeProfiler('File parse', function () {
-      return NetworkUtils.getPlayfabsIp(playfab)
-    })
-
-    cache_playfabToIp[playfab] = ip
     return { ip, playfab, ping }
   })
 
-  return Promise.all(promises)
+  const playerInfoList = await Promise.all(promises)
+  return playerInfoList.filter(playerInfo => !!playerInfo)
 }
 
 /**
