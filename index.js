@@ -1,55 +1,8 @@
 require('dotenv').config()
 
-const POLL_RATE = process.env.POLL_RATE ?? 6000
-
-const getRcon = require('./utils/getRcon')
 const NetworkUtils = require('./utils/network.js')
-const Queue = require('./utils/Queue')
 const timeProfiler = require('./utils/timeProfiler')
-const getTrafficRuleUpdates = require('./utils/getTrafficRuleUpdates')
-
-const queue = new Queue()
-/**
- * Main execution
- */
-const main = async function () {
-  // Main takes care of adding/updating items in the queue
-  const rcon = await getRcon()
-
-  await timeProfiler('Rule adding/deleting', async function () {
-    const trafficRuleUpdates = await getTrafficRuleUpdates(rcon)
-
-    // Iterate through trafficRuleUpdates and add or update the queue
-    trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {
-      const indexOfItemInQueue = queue.findItemIndex(function (queueItem) {
-        return queueItem.ip === trafficRuleUpdate.ip
-      })
-
-      if (indexOfItemInQueue === -1) {
-        queue.enqueue(trafficRuleUpdate)
-      } else {
-        queue.updateIndex(indexOfItemInQueue, trafficRuleUpdate)
-      }
-    })
-  })
-}
-
-let hasProgramTerminated = false
-
-const mainInterval = async function () {
-  if (hasProgramTerminated) {
-    return
-  }
-
-  try {
-    await timeProfiler('Main', main)
-  } catch (err) {
-    console.log('There was an error in main')
-    console.log(err)
-  } finally {
-    setTimeout(mainInterval, POLL_RATE)
-  }
-}
+const { startMainInterval, terminate } = require('./intervals/main')
 
 const ipsThrottled = new Set()
 
@@ -64,6 +17,8 @@ const dequeueItemAndUpdateNetwork = async function () {
     ipsThrottled.delete(trafficRuleInfo.ip)
   }
 }
+
+let hasProgramTerminated = false
 
 const networkUpdateInterval = async function () {
   if (hasProgramTerminated) {
@@ -94,7 +49,7 @@ const startupProcesses = async function () {
     process.exit()
   })
 
-  mainInterval()
+  startMainInterval(process.env.POLL_RATE)
   networkUpdateInterval()
 
   console.log('hello!')
@@ -106,7 +61,8 @@ startupProcesses()
 
 process.on('SIGINT', () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
-  hasProgramTerminated = true
+  terminate()
+  hasProgramTerminated = false
 
   setTimeout(async function () {
     await deleteAllRulesWithLogging()
