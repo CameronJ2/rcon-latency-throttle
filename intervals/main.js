@@ -39,7 +39,7 @@ const startMainInterval = async function (POLL_RATE = 10000) {
     console.log('There was an error in main')
     console.log(err)
   } finally {
-    setTimeout(mainInterval, POLL_RATE)
+    setTimeout(startMainInterval, POLL_RATE)
   }
 }
 
