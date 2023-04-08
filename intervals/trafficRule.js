@@ -1,6 +1,6 @@
-const NetworkUtils = require('./utils/network.js')
-const timeProfiler = require('./utils/timeProfiler')
-const Queue = require('./utils/Queue')
+const NetworkUtils = require('../utils/network.js')
+const timeProfiler = require('../utils/timeProfiler')
+const Queue = require('../utils/Queue')
 
 const queue = new Queue()
 const ipsThrottled = new Set()
