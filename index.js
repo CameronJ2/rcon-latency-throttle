@@ -3,7 +3,6 @@ require('dotenv').config()
 const NetworkUtils = require('./utils/network.js')
 const mainInterval = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
-const ipInterval = require('./intervals/ip')
 
 const deleteAllRulesWithLogging = function () {
   return NetworkUtils.deleteAllRules().then(function () {
@@ -19,7 +18,6 @@ const startupProcesses = async function () {
 
   mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
-  ipInterval.start(process.env.IP_POLL_RATE)
 
   console.log('hello!')
   const testLog = await NetworkUtils.getAllPlayfabIps()
@@ -33,7 +31,6 @@ process.on('SIGINT', () => {
 
   trafficRuleInterval.terminate()
   mainInterval.terminate()
-  ipInterval.terminate()
   hasProgramTerminated = false
 
   setTimeout(async function () {

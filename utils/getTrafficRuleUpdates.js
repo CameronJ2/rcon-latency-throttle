@@ -2,12 +2,10 @@
 
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
-const { getPlayfabsToIps } = require('../intervals/ip')
 
 const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
-const cache_playfabToIp = {}
 const cache_playfabToLastDelay = {}
 
 /**
@@ -63,7 +61,7 @@ const getPlayerInfoList = async function (rcon) {
 
   const pingDictionary = createPingDictionary(playerList)
   const entries = Object.entries(pingDictionary)
-  const playfabsToIps = await getPlayfabsToIps()
+  const playfabsToIps = await timeProfiler('Getting IPs', NetworkUtils.getAllPlayfabIps)
 
   const promises = entries.map(async function ([playfab, ping]) {
     const ip = playfabsToIps[playfab]
