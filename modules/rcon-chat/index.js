@@ -1,5 +1,5 @@
 const { Rcon } = require('rcon-client')
-const { startupProcesses, teardownProcesses } = require('../../modules/throttler')
+const { createInstance } = require('../../modules/throttler')
 
 const formatString = function (string) {
   return string
@@ -39,6 +39,8 @@ const getRcon = async function () {
   return cached_rcon
 }
 
+let lastInstance = null
+
 const start = async function () {
   const rcon = await getRcon()
 
@@ -50,7 +52,7 @@ const start = async function () {
 
     rcon.send('info').then(console.log)
 
-    rcon.socket.on('data', function (buffer) {
+    rcon.socket.on('data', async function (buffer) {
       const formattedString = formatString(buffer.toString())
       const [unformattedPlayfab, name, userMessage] = formattedString
         .split(',')
@@ -77,7 +79,14 @@ const start = async function () {
       }
 
       console.log(`Valid min ping provided: ${minPing}`)
-      startupProcesses(minPing)
+      const throttlerInstance = createInstance()
+
+      if (lastInstance) {
+        await lastInstance.teardownProcesses()
+      }
+
+      throttlerInstance.startupProcesses()
+      lastInstance = throttlerInstance
     })
 
     rcon.on('error', function (err) {
