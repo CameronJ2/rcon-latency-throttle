@@ -55,10 +55,6 @@ const start = async function () {
       console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
 
-      if (formattedString.startsWith(';')) {
-        return
-      }
-
       const [unformattedPlayfab, name, userMessage] = formattedString
         .split(',')
         .map(val => val.trim())
