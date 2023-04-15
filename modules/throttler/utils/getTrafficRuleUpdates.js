@@ -6,6 +6,7 @@ const NetworkUtils = require('./network.js')
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
 const cache_playfabToLastDelay = {}
+let minPing = process.env.MIN_PING
 
 /**
  * Function that gets the playerlist from the rcon object. Return the playerlist
@@ -81,7 +82,7 @@ const getPlayerInfoList = async function (rcon) {
  * Creates/deletes traffic rules depending on logic for each player
  * @param {rcon} - rcon object
  */
-const getTrafficRuleUpdates = async function (rcon, minPing) {
+const getTrafficRuleUpdates = async function (rcon) {
   const playerInfoList = await getPlayerInfoList(rcon)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule

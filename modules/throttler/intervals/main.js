@@ -10,7 +10,7 @@ const main = async function (minPing) {
   const rcon = await getRcon()
 
   await timeProfiler('Rule adding/deleting', async function () {
-    const trafficRuleUpdates = await getTrafficRuleUpdates(rcon, minPing)
+    const trafficRuleUpdates = await getTrafficRuleUpdates(rcon)
 
     // Iterate through trafficRuleUpdates and add or update the queue
     trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {
