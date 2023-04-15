@@ -56,6 +56,8 @@ const start = async function () {
       const [unformattedPlayfab, name, userMessage] = formattedString
         .split(',')
         .map(val => val.trim())
+
+      console.log({ unformattedPlayfab, name, userMessage })
       const formattedPlayfab = unformattedPlayfab.split(' ')[1]
 
       // Step 1 - check if command is valid
