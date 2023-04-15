@@ -1,5 +1,5 @@
 const NetworkUtils = require('./utils/network.js')
-const { createInstance } = require('./intervals/main')
+const { createInstance: createMainIntervalInstance } = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
 
 const deleteAllRulesWithLogging = function () {
@@ -9,7 +9,7 @@ const deleteAllRulesWithLogging = function () {
 }
 
 const createInstance = function () {
-  const mainInterval = createInstance()
+  const mainInterval = createMainIntervalInstance()
 
   const startupProcesses = async function (minPing) {
     await deleteAllRulesWithLogging().catch(function (err) {
