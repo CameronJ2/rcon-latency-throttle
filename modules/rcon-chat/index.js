@@ -85,7 +85,7 @@ const start = async function () {
         await lastInstance.teardownProcesses()
       }
 
-      throttlerInstance.startupProcesses()
+      throttlerInstance.startupProcesses(minPingAsNum)
       lastInstance = throttlerInstance
     })
 
