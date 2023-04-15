@@ -4,7 +4,7 @@ const getTrafficRuleUpdates = require('../utils/getTrafficRuleUpdates')
 const { createInstance: createTrafficRuleInstance } = require('./trafficRule')
 
 const createInstance = function () {
-  const { queue } = createTrafficRuleInstance()
+  const { queue: trafficRuleQueue } = createTrafficRuleInstance()
 
   let hasProgramTerminated = false
 
