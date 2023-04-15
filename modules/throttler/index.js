@@ -2,6 +2,12 @@ const NetworkUtils = require('./utils/network.js')
 const mainInterval = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
 
+const deleteAllRulesWithLogging = function () {
+  return NetworkUtils.deleteAllRules().then(function () {
+    console.log('Wiped rules successfully')
+  })
+}
+
 const createInstance = function () {
   const startupProcesses = async function (minPing) {
     await deleteAllRulesWithLogging().catch(function (err) {
@@ -29,9 +35,7 @@ process.on('SIGINT', () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
 
   setTimeout(async function () {
-    await NetworkUtils.deleteAllRules().then(function () {
-      console.log('Wiped rules successfully')
-    })
+    await deleteAllRulesWithLogging()
     process.exit()
   }, 5000)
 })
