@@ -38,4 +38,6 @@ process.on('SIGINT', () => {
   teardownProcesses()
 })
 
+startupProcesses()
+
 module.exports = { startupProcesses, teardownProcesses }
