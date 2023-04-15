@@ -2,6 +2,8 @@ const NetworkUtils = require('./utils/network.js')
 const mainInterval = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
 
+global.hasProgramTerminated = false
+
 const deleteAllRulesWithLogging = function () {
   return NetworkUtils.deleteAllRules().then(function () {
     console.log('Wiped rules successfully')
@@ -14,6 +16,7 @@ const startupProcesses = async function (minPing) {
     process.exit()
   })
 
+  global.hasProgramTerminated = false
   mainInterval.start(process.env.POLL_RATE, minPing)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
 
@@ -23,8 +26,7 @@ const startupProcesses = async function (minPing) {
 }
 
 const teardownProcesses = function () {
-  trafficRuleInterval.terminate()
-  mainInterval.terminate()
+  global.hasProgramTerminated = true
 
   setTimeout(async function () {
     await deleteAllRulesWithLogging()

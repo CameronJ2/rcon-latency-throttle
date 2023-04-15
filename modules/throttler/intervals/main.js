@@ -3,8 +3,6 @@ const timeProfiler = require('../utils/timeProfiler')
 const { getTrafficRuleUpdates } = require('../utils/getTrafficRuleUpdates')
 const { queue: trafficRuleQueue } = require('./trafficRule')
 
-let hasProgramTerminated = false
-
 const main = async function (minPing) {
   // Main takes care of adding/updating items in the queue
   const rcon = await getRcon()
@@ -28,7 +26,7 @@ const main = async function (minPing) {
 }
 
 const start = async function (POLL_RATE = 10000, minPing) {
-  if (hasProgramTerminated) {
+  if (global.hasProgramTerminated) {
     return
   }
 
@@ -44,8 +42,4 @@ const start = async function (POLL_RATE = 10000, minPing) {
   }
 }
 
-const terminate = function () {
-  hasProgramTerminated = true
-}
-
-module.exports = { start, terminate }
+module.exports = { start }

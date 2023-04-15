@@ -5,8 +5,6 @@ const Queue = require('../utils/Queue')
 const queue = new Queue()
 const ipsThrottled = new Set()
 
-let hasProgramTerminated = false
-
 const dequeueItemAndUpdateNetwork = async function () {
   const trafficRuleInfo = queue.dequeue()
 
@@ -20,7 +18,7 @@ const dequeueItemAndUpdateNetwork = async function () {
 }
 
 const start = async function (trafficRuleUpdateRate = 1000) {
-  if (hasProgramTerminated) {
+  if (global.hasProgramTerminated) {
     return
   }
 
@@ -38,8 +36,4 @@ const start = async function (trafficRuleUpdateRate = 1000) {
   }
 }
 
-const terminate = function () {
-  hasProgramTerminated = true
-}
-
-module.exports = { start, terminate, queue }
+module.exports = { start, queue }

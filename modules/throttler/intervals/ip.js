@@ -1,11 +1,10 @@
 const { getAllPlayfabIps } = require('../utils/network')
 const timeProfiler = require('../utils/timeProfiler')
-let hasProgramTerminated = false
 
 let playfabsToIps = {}
 
 const start = async function (pollRate = 10000) {
-  if (hasProgramTerminated) {
+  if (global.hasProgramTerminated) {
     return
   }
 
