@@ -30,13 +30,13 @@ const teardownProcesses = function () {
 
   setTimeout(async function () {
     await deleteAllRulesWithLogging()
-    process.exit()
   }, 5000)
 }
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
-  teardownProcesses()
+  await teardownProcesses()
+  process.exit()
 })
 
 module.exports = { startupProcesses, teardownProcesses }
