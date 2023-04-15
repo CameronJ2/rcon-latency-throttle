@@ -82,6 +82,7 @@ const getPlayerInfoList = async function (rcon) {
  * @param {rcon} - rcon object
  */
 const getTrafficRuleUpdates = async function (rcon, minPing) {
+  console.log('in traffic rule updates', minPing)
   const playerInfoList = await getPlayerInfoList(rcon)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
