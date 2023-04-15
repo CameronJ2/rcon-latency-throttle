@@ -3,7 +3,6 @@
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
 
-const MIN_PING = process.env.MIN_PING ?? 52
 const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
 const cache_playfabToLastDelay = {}
@@ -82,7 +81,7 @@ const getPlayerInfoList = async function (rcon) {
  * Creates/deletes traffic rules depending on logic for each player
  * @param {rcon} - rcon object
  */
-const getTrafficRuleUpdates = async function (rcon) {
+const getTrafficRuleUpdates = async function (rcon, minPing) {
   const playerInfoList = await getPlayerInfoList(rcon)
 
   // For each ip, check if their ping is under minimum. If so, create a traffic rule
@@ -90,9 +89,9 @@ const getTrafficRuleUpdates = async function (rcon) {
     const currentDelay = cache_playfabToLastDelay[playerInfo.playfab] ?? 0
     const delayToAdd =
       playerInfo.ping > 0
-        ? Math.min(Math.max(MIN_PING - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
+        ? Math.min(Math.max(minPing - playerInfo.ping, -MAX_DELAY_ADDED), MAX_DELAY_ADDED)
         : 0
-    const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
+    const newDelay = Math.max(Math.min(currentDelay + delayToAdd, minPing), 0)
 
     // console.log({
     //   ip: playerInfo.ip,

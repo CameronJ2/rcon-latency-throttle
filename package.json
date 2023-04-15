@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start-throttler": "node ./modules/throttler/index.js",
+    "start-rconchat": "node ./modules/rcon-chat/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
