@@ -52,6 +52,7 @@ const start = async function () {
     rcon.send('info').then(console.log)
 
     rcon.socket.on('data', function (buffer) {
+      console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
       const [unformattedPlayfab, name, userMessage] = formattedString
         .split(',')
