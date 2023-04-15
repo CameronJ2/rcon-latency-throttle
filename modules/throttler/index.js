@@ -9,6 +9,7 @@ const deleteAllRulesWithLogging = function () {
 }
 
 const startupProcesses = async function (minPing) {
+  hasProgramTerminated = true
   await deleteAllRulesWithLogging().catch(function (err) {
     console.log('Error while wiping rules', err)
     process.exit()

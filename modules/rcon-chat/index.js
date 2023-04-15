@@ -1,6 +1,6 @@
 const { Rcon } = require('rcon-client')
 const throttler = require('../../modules/throttler')
-const { setMinPing } = require('../throttler/utils/getTrafficRuleUpdates')
+const trafficRuleUpdater = require('../throttler/utils/getTrafficRuleUpdates')
 
 const formatString = function (string) {
   return string
@@ -43,7 +43,7 @@ const getRcon = async function () {
 const start = async function () {
   const rcon = await getRcon()
 
-  const authorizedPlayfabs = new Set(['59BB3CF55044CB94'])
+  const authorizedPlayfabs = new Set(['59BB3CF55044CB94', '8770BD43A33505C0', '63E09396DD2B969F'])
 
   try {
     const sendCommand = await rcon.send('listen chat')
@@ -77,8 +77,14 @@ const start = async function () {
         return console.error(`Invalid min ping provided: ${minPing}`)
       }
 
+      if (minPing === 0) {
+        throttler.teardownProcesses()
+        return rcon.send(`say Throttling disabled`)
+      }
+
       console.log(`Valid min ping provided: ${minPing}`)
-      setMinPing(minPing)
+      trafficRuleUpdater.setMinPing(minPing)
+      rcon.send(`say Setting minimum ping to ${minPing}`)
     })
 
     rcon.on('error', function (err) {
