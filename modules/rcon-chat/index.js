@@ -54,9 +54,18 @@ const start = async function () {
     rcon.socket.on('data', function (buffer) {
       console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
+
+      if (formatString.startsWith(';')) {
+        return
+      }
+
       const [unformattedPlayfab, name, userMessage] = formattedString
         .split(',')
         .map(val => val.trim())
+
+      if (!unformattedPlayfab || !userMessage) {
+        return
+      }
 
       console.log({ unformattedPlayfab, name, userMessage })
       const formattedPlayfab = unformattedPlayfab.split(' ')[1]
