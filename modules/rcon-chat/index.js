@@ -1,5 +1,6 @@
 const { Rcon } = require('rcon-client')
-const { startupProcesses, teardownProcesses } = require('../../modules/throttler')
+const throttler = require('../../modules/throttler')
+const { setMinPing } = require('../throttler/utils/getTrafficRuleUpdates')
 
 const formatString = function (string) {
   return string
@@ -77,7 +78,7 @@ const start = async function () {
       }
 
       console.log(`Valid min ping provided: ${minPing}`)
-      startupProcesses(minPing)
+      setMinPing(minPing)
     })
 
     rcon.on('error', function (err) {
@@ -87,5 +88,7 @@ const start = async function () {
     console.error({ err })
   }
 }
+
+throttler.startupProcesses()
 
 module.exports = { start }

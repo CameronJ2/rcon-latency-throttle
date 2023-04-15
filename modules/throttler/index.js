@@ -1,4 +1,3 @@
-require('dotenv').config()
 const NetworkUtils = require('./utils/network.js')
 const mainInterval = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
@@ -38,7 +37,5 @@ process.on('SIGINT', () => {
   console.log('Caught SIGINT. Performing cleanup before exiting.')
   teardownProcesses()
 })
-
-startupProcesses()
 
 module.exports = { startupProcesses, teardownProcesses }

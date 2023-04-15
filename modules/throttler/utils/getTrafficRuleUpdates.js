@@ -1,5 +1,3 @@
-// grep -o 'RemoteAddr: [0-9\.]\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \([0-9\.]\+\).*MordhauOnlineSubsystem:\([^ ,[:space:]]*\).*/\1 \2/' | sort -u
-
 const timeProfiler = require('./timeProfiler')
 const NetworkUtils = require('./network.js')
 
@@ -7,6 +5,10 @@ const MAX_DELAY_ADDED = process.env.MAX_DELAY_ADDED ?? 50
 
 const cache_playfabToLastDelay = {}
 let minPing = process.env.MIN_PING
+
+const setMinPing = function (newMinPing) {
+  minPing = newMinPing
+}
 
 /**
  * Function that gets the playerlist from the rcon object. Return the playerlist
@@ -116,4 +118,4 @@ const getTrafficRuleUpdates = async function (rcon) {
   })
 }
 
-module.exports = getTrafficRuleUpdates
+module.exports = { getTrafficRuleUpdates, setMinPing }
