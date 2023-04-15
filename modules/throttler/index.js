@@ -10,14 +10,14 @@ const deleteAllRulesWithLogging = function () {
   })
 }
 
-const startupProcesses = async function (minPing) {
+const startupProcesses = async function () {
   await deleteAllRulesWithLogging().catch(function (err) {
     console.log('Error while wiping rules', err)
     process.exit()
   })
 
   global.hasProgramTerminated = false
-  mainInterval.start(process.env.POLL_RATE, minPing)
+  mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
 
   console.log('hello!')
@@ -25,12 +25,9 @@ const startupProcesses = async function (minPing) {
   console.log('getAllPlayfabIps:', testLog)
 }
 
-const teardownProcesses = function () {
+const teardownProcesses = async function () {
   global.hasProgramTerminated = true
-
-  setTimeout(async function () {
-    await deleteAllRulesWithLogging()
-  }, 5000)
+  await deleteAllRulesWithLogging()
 }
 
 process.on('SIGINT', async () => {

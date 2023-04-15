@@ -3,7 +3,7 @@ const timeProfiler = require('../utils/timeProfiler')
 const { getTrafficRuleUpdates } = require('../utils/getTrafficRuleUpdates')
 const { queue: trafficRuleQueue } = require('./trafficRule')
 
-const main = async function (minPing) {
+const main = async function () {
   // Main takes care of adding/updating items in the queue
   const rcon = await getRcon()
 
@@ -25,15 +25,14 @@ const main = async function (minPing) {
   })
 }
 
-const start = async function (POLL_RATE = 10000, minPing) {
+const start = async function (POLL_RATE = 10000) {
+  console.log({ inThrottlerInterval: global.hasProgramTerminated, global })
   if (global.hasProgramTerminated) {
     return
   }
 
   try {
-    await timeProfiler('Main', function () {
-      main(minPing)
-    })
+    await timeProfiler('Main', main)
   } catch (err) {
     console.log('There was an error in main')
     console.log(err)
