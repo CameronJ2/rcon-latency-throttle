@@ -1,5 +1,5 @@
 const NetworkUtils = require('./utils/network.js')
-const mainInterval = require('./intervals/main')
+const { createInstance } = require('./intervals/main')
 const trafficRuleInterval = require('./intervals/trafficRule')
 
 const deleteAllRulesWithLogging = function () {
@@ -9,6 +9,8 @@ const deleteAllRulesWithLogging = function () {
 }
 
 const createInstance = function () {
+  const mainInterval = createInstance()
+
   const startupProcesses = async function (minPing) {
     await deleteAllRulesWithLogging().catch(function (err) {
       console.log('Error while wiping rules', err)
