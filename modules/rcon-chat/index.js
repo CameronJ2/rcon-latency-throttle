@@ -55,7 +55,7 @@ const start = async function () {
       console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
 
-      if (formatString.startsWith(';')) {
+      if (formattedString.startsWith(';')) {
         return
       }
 
