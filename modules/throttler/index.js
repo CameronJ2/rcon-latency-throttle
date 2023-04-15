@@ -9,7 +9,6 @@ const deleteAllRulesWithLogging = function () {
 }
 
 const startupProcesses = async function (minPing) {
-  hasProgramTerminated = true
   await deleteAllRulesWithLogging().catch(function (err) {
     console.log('Error while wiping rules', err)
     process.exit()
@@ -26,7 +25,6 @@ const startupProcesses = async function (minPing) {
 const teardownProcesses = function () {
   trafficRuleInterval.terminate()
   mainInterval.terminate()
-  hasProgramTerminated = false
 
   setTimeout(async function () {
     await deleteAllRulesWithLogging()

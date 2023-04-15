@@ -89,13 +89,13 @@ const start = async function () {
         return console.error(`Invalid min ping provided: ${minPing}`)
       }
 
-      if (minPing === 0) {
+      if (minPingAsNum === 0) {
         throttler.teardownProcesses()
         return rcon.send(`say Throttling disabled`)
       }
 
       console.log(`Valid min ping provided: ${minPing}`)
-      trafficRuleUpdater.setMinPing(minPing)
+      trafficRuleUpdater.setMinPing(minPingAsNum)
       rcon.send(`say Setting minimum ping to ${minPing}`)
     })
 
