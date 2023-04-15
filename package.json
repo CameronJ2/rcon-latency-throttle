@@ -6,6 +6,7 @@
   "scripts": {
     "start-throttler": "node ./modules/throttler/index.js",
     "start-rconchat": "node ./modules/rcon-chat/index.js",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
