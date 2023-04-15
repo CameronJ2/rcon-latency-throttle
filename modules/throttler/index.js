@@ -16,9 +16,7 @@ const startupProcesses = async function () {
     process.exit()
   })
 
-  console.log('IN STARTUP PROCESSES', { hasProgramTerminated: global.hasProgramTerminated })
   global.hasProgramTerminated = false
-  console.log('IN STARTUP PROCESSES', { hasProgramTerminated: global.hasProgramTerminated })
   mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
 

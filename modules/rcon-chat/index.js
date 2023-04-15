@@ -51,7 +51,7 @@ const start = async function () {
 
     rcon.send('info').then(console.log)
 
-    rcon.socket.on('data', function (buffer) {
+    rcon.socket.on('data', async function (buffer) {
       console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
 
@@ -90,8 +90,13 @@ const start = async function () {
         return rcon.send(`say Throttling disabled`)
       }
 
-      console.log(`Valid min ping provided: ${minPing}`)
       trafficRuleUpdater.setMinPing(minPingAsNum)
+      console.log(`Valid min ping provided: ${minPing}`)
+
+      if (global.hasProgramTerminated) {
+        await throttler.startupProcesses()
+      }
+
       rcon.send(`say Setting minimum ping to ${minPing}`)
     })
 

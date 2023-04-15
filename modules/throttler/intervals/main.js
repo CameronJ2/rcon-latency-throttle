@@ -26,7 +26,6 @@ const main = async function () {
 }
 
 const start = async function (POLL_RATE = 10000) {
-  console.log({ inThrottlerInterval: global.hasProgramTerminated, global })
   if (global.hasProgramTerminated) {
     return
   }
