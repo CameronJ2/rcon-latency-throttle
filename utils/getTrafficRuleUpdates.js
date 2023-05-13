@@ -94,22 +94,18 @@ const getTrafficRuleUpdates = async function (rcon) {
         : 0
     const newDelay = Math.max(Math.min(currentDelay + delayToAdd, MIN_PING), 0)
 
-    console.log({
-      ip: playerInfo.ip,
-      playfab: playerInfo.playfab,
-      rconPing: playerInfo.ping,
-      currentDelay,
-      newDelay
-    })
+    // console.log({
+    //   ip: playerInfo.ip,
+    //   playfab: playerInfo.playfab,
+    //   rconPing: playerInfo.ping,
+    //   currentDelay,
+    //   newDelay
+    // })
 
-    PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
+    cache_playfabToLastDelay[playerInfo.playfab] = newDelay
 
-    if (newDelay > 0) {
-      await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
-      ipsThrottled.add(playerInfo.ip)
-    } else if (ipsThrottled.has(playerInfo.ip)) {
-      await NetworkUtils.deleteRule(playerInfo.ip)
-      ipsThrottled.delete(playerInfo.ip)
+    if (newDelay > 0 && currentDelay !== newDelay) {
+      return { ip: playerInfo.ip, delay: newDelay }
     }
   })
 
