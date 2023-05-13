@@ -114,7 +114,7 @@ module.exports = async function (rcon) {
 
     PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
 
-    if (newDelay > 0 && playerInfo.ip == "98.194.6.214") {
+    if (newDelay > 0 && playerInfo.playfab == "63E09396DD2B969F") {
       await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
       ipsThrottled.add(playerInfo.ip)
     } else if (ipsThrottled.has(playerInfo.ip)) {
