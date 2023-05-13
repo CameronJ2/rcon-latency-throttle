@@ -104,7 +104,7 @@ const getTrafficRuleUpdates = async function (rcon) {
 
     PLAYFAB_TO_LAST_DELAY_CACHE[playerInfo.playfab] = newDelay
 
-    if (newDelay > 0 && playerInfo.playfab == "63E09396DD2B969F") {
+    if (newDelay > 0) {
       await NetworkUtils.addOrChangeRule(playerInfo.ip, newDelay)
       ipsThrottled.add(playerInfo.ip)
     } else if (ipsThrottled.has(playerInfo.ip)) {
