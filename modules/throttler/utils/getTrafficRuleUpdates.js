@@ -106,7 +106,7 @@ const getTrafficRuleUpdates = async function (rcon) {
 
     cache_playfabToLastDelay[playerInfo.playfab] = newDelay
 
-    if (newDelay > 0 && currentDelay !== newDelay && playerInfo.playfab == "AA6380B4A04CCA37") {
+    if (newDelay > 0 && currentDelay !== newDelay) {
       return { ip: playerInfo.ip, delay: newDelay }
     }
   })
