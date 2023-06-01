@@ -24,7 +24,11 @@ const getNetworkInterfaceId = async function () {
 }
 
 const getPlayfabsIp = async function (playfab) {
-  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ../Mordhau.log | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
+  const findLogCommand = `install_path=$(docker inspect ${process.env.CONTAINER_NAME} | grep UpperDir | awk '{print $2}' | tr -d '",'); echo $install_path/home/steam/mordhau/Mordhau/Saved/Logs/Mordhau.log`
+  const logLocationWithUnwantedCharacters = await promisifiedExec(findLogCommand)
+  const logLocation = logLocationWithUnwantedCharacters.replace('\n', '')
+
+  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ${logLocation} | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
   const ipWithUnwantedCharacters = await promisifiedExec(command)
   const ip = ipWithUnwantedCharacters.replace('\n', '')
   return ip
