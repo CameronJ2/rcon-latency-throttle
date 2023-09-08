@@ -24,6 +24,8 @@ const getNetworkInterfaceId = async function () {
 }
 
 const getPlayfabsIp = async function (playfab) {
+  console.log('*********** In getPlayfabsIp ************')
+  console.log('IN getPlayfabsIp')
   const findLogCommand = `install_path=$(docker inspect ${process.env.CONTAINER_NAME} | grep UpperDir | awk '{print $2}' | tr -d '",'); echo $install_path/home/steam/mordhau/Mordhau/Saved/Logs/Mordhau.log`
   const logLocationWithUnwantedCharacters = await promisifiedExec(findLogCommand)
   const logLocation = logLocationWithUnwantedCharacters.replace('\n', '')
@@ -31,6 +33,7 @@ const getPlayfabsIp = async function (playfab) {
   const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ${logLocation} | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
   const ipWithUnwantedCharacters = await promisifiedExec(command)
   const ip = ipWithUnwantedCharacters.replace('\n', '')
+  console.log({ command, ipWithUnwantedCharacters, ip })
   return ip
 }
 
@@ -39,10 +42,13 @@ const getPlayfabsIp = async function (playfab) {
  * { AA6380B4A04CCA37: '184.98.28.14' }
  */
 const getAllPlayfabIps = async function () {
+  console.log('*********** IN getAllPlayfabIps ************')
   // grep -o 'RemoteAddr: [0-9\.]\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \([0-9\.]\+\).*MordhauOnlineSubsystem:\([^ ,[:space:]]*\).*/\1 \2/' | sort -u
   const command = `grep -o 'RemoteAddr: [0-9\\.]\\+.*MordhauOnlineSubsystem:[^ ,[:space:]]*' ../Mordhau.log | sed 's/RemoteAddr: \\([0-9\\.]\\+\\).*MordhauOnlineSubsystem:\\([^ ,[:space:]]*\\).*/\\1 \\2/'`
   const ipsAndPlayfabsString = await promisifiedExec(command)
   const splitByLine = ipsAndPlayfabsString.split('\n')
+
+  console.log({ ipsAndPlayfabsString, splitByLine })
 
   const output = {}
 
