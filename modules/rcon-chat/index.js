@@ -47,12 +47,10 @@ const start = async function () {
 
   try {
     const sendCommand = await rcon.send('listen chat')
-    console.log({ sendCommand })
 
     rcon.send('info').then(console.log)
 
     rcon.socket.on('data', async function (buffer) {
-      console.log({ fullmsg: formatString(buffer.toString()) })
       const formattedString = formatString(buffer.toString())
 
       const [unformattedPlayfab, name, userMessage] = formattedString
@@ -63,7 +61,6 @@ const start = async function () {
         return
       }
 
-      console.log({ unformattedPlayfab, name, userMessage })
       const formattedPlayfab = unformattedPlayfab.split(' ')[1]
 
       // Step 1 - check if command is valid
