@@ -39,8 +39,7 @@ const getPlayfabsIp = async function (playfab) {
  * { AA6380B4A04CCA37: '184.98.28.14' }
  */
 const getAllPlayfabIps = async function () {
-  //grep -oE "RemoteAddr: [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.*MordhauOnlineSubsystem:.*$" Mordhau.log | tr ',:' ' ' | awk '{print $2,$17}'
-  const command = `grep -oE "RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:.*$" Mordhau.log | tr ',:' ' ' | awk '{print $2,$17}'`
+  const command = `grep -oE "RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:.*$" ../Mordhau.log | tr ',:' ' ' | awk '{print $2,$17}'`
   const ipsAndPlayfabsString = await promisifiedExec(command)
   const splitByLine = ipsAndPlayfabsString.split('\n')
 
