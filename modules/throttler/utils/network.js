@@ -53,6 +53,8 @@ const getAllPlayfabIps = async function () {
         .replace(/(\r\n|\n|\r)/gm, '')
         .split(' ')
 
+      console.log({ playfab })
+
       if (!output[playfab]) {
         output[playfab] = ip
       }
