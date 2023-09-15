@@ -48,7 +48,10 @@ const getAllPlayfabIps = async function () {
   splitByLine
     .filter(line => typeof line === 'string' && line.trim().length > 0)
     .forEach(function (line) {
-      const [ip, playfab] = line.replace("'", '').replace('\\r', '').split(' ')
+      const [ip, playfab] = line
+        .replace("'", '')
+        .replace(/(\r\n|\n|\r)/gm, '')
+        .split(' ')
 
       if (!output[playfab]) {
         output[playfab] = ip
