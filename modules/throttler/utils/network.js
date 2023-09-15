@@ -61,7 +61,7 @@ const getAllPlayfabIps = async function () {
     })
 
   console.log(`*******FORMATTED IP LIST********`)
-  console.log(JSON.stringify(splitByLine, null, 2))
+  console.log(JSON.stringify(output, null, 2))
   console.log('********************************')
 
   return output
