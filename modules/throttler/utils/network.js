@@ -30,7 +30,7 @@ const getPlayfabsIp = async function (playfab) {
 
   const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ${logLocation} | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
   const ipWithUnwantedCharacters = await promisifiedExec(command)
-  const ip = ipWithUnwantedCharacters.replace('\n', '').replace('\r', '')
+  const ip = ipWithUnwantedCharacters.replace('\n', '')
   return ip
 }
 
@@ -48,7 +48,7 @@ const getAllPlayfabIps = async function () {
   splitByLine
     .filter(line => typeof line === 'string' && line.trim().length > 0)
     .forEach(function (line) {
-      const [ip, playfab] = line.replace("'", '').split(' ')
+      const [ip, playfab] = line.replace("'", '').replace('\r', '').split(' ')
 
       if (!output[playfab]) {
         output[playfab] = ip
