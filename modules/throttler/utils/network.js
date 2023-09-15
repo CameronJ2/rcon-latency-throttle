@@ -23,23 +23,16 @@ const getNetworkInterfaceId = async function () {
   return cached_networkInterfaceId
 }
 
-const getPlayfabsIp = async function (playfab) {
-  const findLogCommand = `install_path=$(docker inspect ${process.env.CONTAINER_NAME} | grep UpperDir | awk '{print $2}' | tr -d '",'); echo $install_path/home/steam/mordhau/Mordhau/Saved/Logs/Mordhau.log`
-  const logLocationWithUnwantedCharacters = await promisifiedExec(findLogCommand)
-  const logLocation = logLocationWithUnwantedCharacters.replace('\n', '')
-
-  const command = `grep -oE 'RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:${playfab}' ${logLocation} | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | tail -1`
-  const ipWithUnwantedCharacters = await promisifiedExec(command)
-  const ip = ipWithUnwantedCharacters.replace('\n', '')
-  return ip
-}
-
 /**
  * Returns a dictionary of playfabs to ips
  * { AA6380B4A04CCA37: '184.98.28.14' }
  */
 const getAllPlayfabIps = async function () {
-  const command = `grep -oE "RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:.*$" ../Mordhau.log | tr ',:' ' ' | awk '{print $2,$17}'`
+  const findLogCommand = `install_path=$(docker inspect ${process.env.CONTAINER_NAME} | grep UpperDir | awk '{print $2}' | tr -d '",'); echo $install_path/home/steam/mordhau/Mordhau/Saved/Logs/Mordhau.log`
+  const logLocationWithUnwantedCharacters = await promisifiedExec(findLogCommand)
+  const logLocation = logLocationWithUnwantedCharacters.replace('\n', '')
+
+  const command = `grep -oE "RemoteAddr: [0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}.*MordhauOnlineSubsystem:.*$" ${logLocation} | tr ',:' ' ' | awk '{print $2,$17}'`
   const ipsAndPlayfabsString = await promisifiedExec(command)
   const splitByLine = ipsAndPlayfabsString.split('\n')
 
@@ -83,4 +76,4 @@ const deleteAllRules = async function () {
   return promisifiedExec(command)
 }
 
-module.exports = { getPlayfabsIp, getAllPlayfabIps, addOrChangeRule, deleteRule, deleteAllRules }
+module.exports = { getAllPlayfabIps, addOrChangeRule, deleteRule, deleteAllRules }
