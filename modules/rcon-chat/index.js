@@ -77,7 +77,10 @@ const start = async function () {
   } catch (err) {
     logError({ err })
   } finally {
-    setTimeout(start, 30000)
+    setTimeout(async () => {
+      await rcon?.end().catch(logError)
+      start()
+    }, 30000)
   }
 }
 
