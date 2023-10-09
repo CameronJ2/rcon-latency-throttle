@@ -69,12 +69,12 @@ const handleOnData = async function (buffer, rcon) {
   }
 
   logInfo(`Valid min ping provided: ${minPing}`)
-  rcon.send(`say Setting minimum ping to ${minPing}...`)
+  rcon.send(`say Setting minimum ping to ${minPing} in 10 seconds...`)
 
   if (global.hasProgramTerminated) {
-    await new Promise(resolve => setTimeout(resolve, (process.env.POLL_RATE ?? 10000) + 1000))
-    await throttler.startupProcesses()
+    await new Promise(resolve => setTimeout(resolve, 10000))
     trafficRuleUpdater.setMinPing(minPingAsNum)
+    await throttler.startupProcesses()
   }
 }
 
