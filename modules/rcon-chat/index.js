@@ -65,17 +65,17 @@ const handleOnData = async function (buffer, rcon) {
   await throttler.teardownProcesses()
 
   if (minPingAsNum === 0) {
-    return cachedRcon.send(`say Throttling disabled`)
+    return rcon.send(`say Throttling disabled`)
   }
 
-  trafficRuleUpdater.setMinPing(minPingAsNum)
   logInfo(`Valid min ping provided: ${minPing}`)
+  rcon.send(`say Setting minimum ping to ${minPing}...`)
+  trafficRuleUpdater.setMinPing(minPingAsNum)
 
   if (global.hasProgramTerminated) {
+    await new Promise(resolve => setTimeout(resolve, (process.env.POLL_RATE ?? 10000) + 1000))
     await throttler.startupProcesses()
   }
-
-  cachedRcon.send(`say Setting minimum ping to ${minPing}`)
 }
 
 const start = async function () {
