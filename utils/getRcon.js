@@ -26,7 +26,9 @@ const getRcon = async function (reconnect = false) {
   })
 
   const timeoutPromise = new Promise((resolve, reject) => {
+    console.log('In timeout promise...')
     setTimeout(() => {
+      console.log('Rejecting...')
       reject()
     }, 5000)
   })
