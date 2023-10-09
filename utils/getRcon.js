@@ -1,23 +1,15 @@
 const { Rcon } = require('rcon-client')
 
-let cached_rcon = null
-
 /**
  * Function that connects to rcon and returns the rcon object
  */
-const getRcon = async function (reconnect = false, wait = 0) {
-  if (cached_rcon && cached_rcon.authenticated && !reconnect) {
-    logInfo('Returning cached rcon...')
-    return cached_rcon
-  }
-
+const getRcon = async function (wait = 0) {
   if (wait > 0) {
+    logInfo('Waiting...')
     await new Promise(resolve => setTimeout(resolve, wait))
   }
 
   logInfo('Attempting connection to rcon...')
-  await cached_rcon?.end()?.catch(logError)
-  cached_rcon = null
 
   const { RCON_HOST, RCON_PORT, RCON_PASSWORD } = process.env
 
@@ -38,22 +30,22 @@ const getRcon = async function (reconnect = false, wait = 0) {
   })
 
   try {
-    cached_rcon = await Promise.race([rconPromise, timeoutPromise])
-    cached_rcon.on('error', async err => {
-      logInfo('RCON connection emmitted error event:', err)
-      cached_rcon = null
+    const rcon = await Promise.race([rconPromise, timeoutPromise])
+    rcon.on('error', async err => {
+      logError('RCON connection emmitted error event:', err)
+      await rcon?.end()?.catch(logError)
     })
-    cached_rcon.on('end', async err => {
-      logInfo('RCON connection emmitted end event')
-      cached_rcon = null
+    rcon.on('end', async event => {
+      logInfo('RCON connection emmitted end event', event)
+      await rcon?.end()?.catch(logError)
     })
   } catch (err) {
     logError('RCON connection timed out, retrying in 10 seconds...', err)
-    return getRcon(true, 10000)
+    return getRcon(10000)
   }
 
   logInfo('Connected to RCON')
-  return cached_rcon
+  return rcon
 }
 
 module.exports = getRcon

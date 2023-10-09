@@ -3,12 +3,19 @@ const timeProfiler = require('../utils/timeProfiler')
 const { getTrafficRuleUpdates } = require('../utils/getTrafficRuleUpdates')
 const { queue: trafficRuleQueue } = require('./trafficRule')
 
+let cachedRcon = null
+
 const main = async function () {
+  if (!cachedRcon?.authenticated) {
+    logInfo('Throttler Module - RCON not connected, attempting reconnect...')
+    await cachedRcon?.end()?.catch(logError)
+    cachedRcon = await getRcon()
+  }
+
   // Main takes care of adding/updating items in the queue
-  const rcon = await getRcon()
 
   await timeProfiler('Rule adding/deleting', async function () {
-    const trafficRuleUpdates = await getTrafficRuleUpdates(rcon)
+    const trafficRuleUpdates = await getTrafficRuleUpdates(cachedRcon)
 
     // Iterate through trafficRuleUpdates and add or update the queue
     trafficRuleUpdates.forEach(async function (trafficRuleUpdate) {

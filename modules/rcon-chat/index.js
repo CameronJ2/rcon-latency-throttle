@@ -25,74 +25,69 @@ const authorizedPlayfabs = new Set([
   'AA6380B4A04CCA37'
 ])
 
-let previousRcon = null
+let cachedRcon = null
 
-const start = async function () {
-  const rcon = await getRcon()
+const handleOnData = async function (buffer) {
+  const formattedString = formatString(buffer.toString())
 
-  if (previousRcon === rcon) {
-    logInfo('Returning early, previousRcon === rcon')
+  console.log({ formattedString })
+
+  const [unformattedPlayfab, name, userMessage] = formattedString.split(',').map(val => val.trim())
+
+  if (!unformattedPlayfab || !userMessage) {
     return
   }
 
-  previousRcon = rcon
+  const formattedPlayfab = unformattedPlayfab.split(' ')[1]
 
-  const handleOnData = async function (buffer) {
-    const formattedString = formatString(buffer.toString())
-
-    console.log({ formattedString })
-
-    const [unformattedPlayfab, name, userMessage] = formattedString
-      .split(',')
-      .map(val => val.trim())
-
-    if (!unformattedPlayfab || !userMessage) {
-      return
-    }
-
-    const formattedPlayfab = unformattedPlayfab.split(' ')[1]
-
-    // Step 1 - check if command is valid
-    if (!userMessage.startsWith('.throttle ')) {
-      return logInfo(`Skipping message "${userMessage}"`)
-    }
-
-    // Step 2 - check if user is authorized
-    if (!authorizedPlayfabs.has(formattedPlayfab)) {
-      return logError(`Player ${name}(${formattedPlayfab}) is unauthorized`)
-    }
-
-    logInfo(`Player ${name}(${formattedPlayfab}) is authorized!`)
-
-    // Step 3 - check if user provided a valid number
-    const [_, minPing] = userMessage.split(' ')
-    const minPingAsNum = Number.parseInt(minPing)
-    if (Number.isNaN(minPingAsNum)) {
-      return logError(`Invalid min ping provided: ${minPing}`)
-    }
-
-    await throttler.teardownProcesses()
-
-    if (minPingAsNum === 0) {
-      return rcon.send(`say Throttling disabled`)
-    }
-
-    trafficRuleUpdater.setMinPing(minPingAsNum)
-    logInfo(`Valid min ping provided: ${minPing}`)
-
-    if (global.hasProgramTerminated) {
-      await throttler.startupProcesses()
-    }
-
-    rcon.send(`say Setting minimum ping to ${minPing}`)
+  // Step 1 - check if command is valid
+  if (!userMessage.startsWith('.throttle ')) {
+    return logInfo(`Skipping message "${userMessage}"`)
   }
 
+  // Step 2 - check if user is authorized
+  if (!authorizedPlayfabs.has(formattedPlayfab)) {
+    return logError(`Player ${name}(${formattedPlayfab}) is unauthorized`)
+  }
+
+  logInfo(`Player ${name}(${formattedPlayfab}) is authorized!`)
+
+  // Step 3 - check if user provided a valid number
+  const [_, minPing] = userMessage.split(' ')
+  const minPingAsNum = Number.parseInt(minPing)
+  if (Number.isNaN(minPingAsNum)) {
+    return logError(`Invalid min ping provided: ${minPing}`)
+  }
+
+  await throttler.teardownProcesses()
+
+  if (minPingAsNum === 0) {
+    return cachedrcon.send(`say Throttling disabled`)
+  }
+
+  trafficRuleUpdater.setMinPing(minPingAsNum)
+  logInfo(`Valid min ping provided: ${minPing}`)
+
+  if (global.hasProgramTerminated) {
+    await throttler.startupProcesses()
+  }
+
+  cachedrcon.send(`say Setting minimum ping to ${minPing}`)
+}
+
+const start = async function () {
   try {
-    await rcon.send('listen chat')
-    rcon.send('info').then(logInfo)
-    rcon.socket.on('data', handleOnData)
+    if (!cachedRcon?.authenticated) {
+      logInfo('RCON Module - RCON not connected, attempting reconnect...')
+      await cachedRcon?.end()?.catch(logError)
+      cachedRcon = await getRcon()
+    }
+
+    await cachedrcon.send('listen chat')
+    cachedrcon.send('info').then(logInfo)
+    cachedrcon.socket.on('data', handleOnData)
   } catch (err) {
-    logError({ err })
+    logError('RCON Module - Error in start function', err)
   } finally {
     setTimeout(() => {
       start()
