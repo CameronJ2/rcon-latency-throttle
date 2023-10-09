@@ -91,7 +91,7 @@ const start = async function () {
   } catch (err) {
     logError({ err })
   } finally {
-    setTimeout(async () => {
+    setTimeout(() => {
       start()
     }, 30000)
   }

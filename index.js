@@ -13,11 +13,11 @@ const getCurrentDateInPST = () => {
 }
 
 global.logInfo = (...args) => {
-  console.log(`[${formatISO9075(getCurrentDateInPST())}] `, ...args)
+  console.log(`[${formatISO9075(getCurrentDateInPST())}] [INFO] `, ...args)
 }
 
 global.logError = (...args) => {
-  console.error(`[${formatISO9075(getCurrentDateInPST())}] `, ...args)
+  console.error(`[${formatISO9075(getCurrentDateInPST())}] [ERROR] `, ...args)
 }
 
 process.on('uncaughtException', (err, origin) => {
