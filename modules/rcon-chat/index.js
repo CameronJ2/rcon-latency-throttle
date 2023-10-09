@@ -25,8 +25,17 @@ const authorizedPlayfabs = new Set([
   'AA6380B4A04CCA37'
 ])
 
+let previousRcon = null
+
 const start = async function () {
   const rcon = await getRcon(true)
+
+  if (previousRcon === rcon) {
+    logInfo('Returning early previousRcon === rcon')
+    return
+  }
+
+  previousRcon = rcon
 
   const handleOnData = async function (buffer) {
     const formattedString = formatString(buffer.toString())
