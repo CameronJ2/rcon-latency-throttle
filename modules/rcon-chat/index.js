@@ -28,10 +28,10 @@ const authorizedPlayfabs = new Set([
 let previousRcon = null
 
 const start = async function () {
-  const rcon = await getRcon(true)
+  const rcon = await getRcon()
 
   if (previousRcon === rcon) {
-    logInfo('Returning early previousRcon === rcon')
+    logInfo('Returning early, previousRcon === rcon')
     return
   }
 
