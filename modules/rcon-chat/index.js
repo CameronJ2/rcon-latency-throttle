@@ -65,10 +65,6 @@ const handleOnData = async function (buffer) {
   rcon.send(`say Setting minimum ping to ${minPing}`)
 }
 
-const handleOnError = function (err) {
-  console.log({ rconError: err })
-}
-
 const start = async function () {
   const rcon = await getRcon(true)
 
@@ -76,7 +72,6 @@ const start = async function () {
     await rcon.send('listen chat')
     rcon.send('info').then(console.log)
     rcon.socket.on('data', handleOnData)
-    rcon.on('error', handleOnError)
   } catch (err) {
     console.error({ err })
   } finally {
