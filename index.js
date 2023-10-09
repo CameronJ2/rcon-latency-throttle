@@ -10,7 +10,6 @@ programStart()
 
 process.on('uncaughtException', (err, origin) => {
   console.log('UNCAUGHT EXCEPTION:', err)
-  process.exit(0)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
