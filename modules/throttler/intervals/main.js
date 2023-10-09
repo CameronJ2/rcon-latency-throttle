@@ -6,10 +6,11 @@ const { queue: trafficRuleQueue } = require('./trafficRule')
 let cachedRcon = null
 
 const main = async function () {
-  if (!cachedRcon?.authenticated) {
+  if (!cachedRcon || !cachedRcon?.authenticated) {
     logInfo('Throttler Module - RCON not connected, attempting reconnect...')
     await cachedRcon?.end()?.catch(logError)
     cachedRcon = await getRcon()
+    return main()
   }
 
   // Main takes care of adding/updating items in the queue

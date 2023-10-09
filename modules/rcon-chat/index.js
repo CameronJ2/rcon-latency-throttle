@@ -25,10 +25,9 @@ const authorizedPlayfabs = new Set([
   'AA6380B4A04CCA37'
 ])
 
-let cachedRcon = null
-
-const handleOnData = async function (buffer) {
-  if (!cachedRcon?.authenticated) {
+const handleOnData = async function (buffer, rcon) {
+  if (!rcon?.authenticated) {
+    logInfo('Skipping handleOnData, rcon not connected')
     return
   }
 
@@ -81,23 +80,12 @@ const handleOnData = async function (buffer) {
 
 const start = async function () {
   try {
-    if (!cachedRcon?.authenticated) {
-      logInfo('RCON Module - RCON not connected, attempting reconnect...')
-      await cachedRcon?.end()?.catch(logError)
-      cachedRcon = null
-      cachedRcon = await getRcon()
-    }
-
-    await cachedRcon.send('listen chat')
-    cachedRcon.send('info').then(logInfo)
-    cachedRcon.socket.on('data', handleOnData)
+    const rcon = await getRcon()
+    rcon.send('info').then(logInfo)
+    await rcon.send('listen chat')
+    rcon.socket.on('data', buffer => handleOnData(buffer, rcon))
   } catch (err) {
     logError('RCON Module - Error in start function', err)
-    await cachedRcon?.end()?.catch(logError)
-  } finally {
-    setTimeout(() => {
-      start()
-    }, 30000)
   }
 }
 
