@@ -40,6 +40,8 @@ const start = async function () {
   const handleOnData = async function (buffer) {
     const formattedString = formatString(buffer.toString())
 
+    console.log({ formattedString })
+
     const [unformattedPlayfab, name, userMessage] = formattedString
       .split(',')
       .map(val => val.trim())
