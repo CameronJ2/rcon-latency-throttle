@@ -6,6 +6,8 @@ let cached_rcon = null
  * Function that connects to rcon and returns the rcon object
  */
 const getRcon = async function (reconnect = false) {
+  console.log({ cached: !!cached_rcon, authed: !!cached_rcon?.authenticated, reconnect })
+
   if (cached_rcon && cached_rcon.authenticated && !reconnect) {
     console.log('Returning cached rcon...')
     return cached_rcon
