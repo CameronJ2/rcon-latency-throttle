@@ -25,7 +25,11 @@ const getRcon = async function (reconnect = false) {
     password: process.env.RCON_PASSWORD
   })
 
-  const timeoutPromise = new Promise((resolve, reject) => setTimeout(() => reject(), 5000))
+  const timeoutPromise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject()
+    }, 5000)
+  })
 
   try {
     const rcon = await Promise.race([rconPromise, timeoutPromise])
