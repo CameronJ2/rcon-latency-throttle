@@ -1,4 +1,4 @@
-const getRcon = require('../utils/getRcon')
+const getRcon = require('../../../utils/getRcon')
 const timeProfiler = require('../utils/timeProfiler')
 const { getTrafficRuleUpdates } = require('../utils/getTrafficRuleUpdates')
 const { queue: trafficRuleQueue } = require('./trafficRule')

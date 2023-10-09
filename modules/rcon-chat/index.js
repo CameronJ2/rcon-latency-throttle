@@ -1,4 +1,4 @@
-const { Rcon } = require('rcon-client')
+const getRcon = require('../../utils/getRcon')
 const throttler = require('../../modules/throttler')
 const trafficRuleUpdater = require('../throttler/utils/getTrafficRuleUpdates')
 
@@ -18,90 +18,69 @@ const formatString = function (string) {
     .replace(/ *\([^)]*\) */, ' ')
 }
 
-let cached_rcon = null
+const authorizedPlayfabs = new Set(['59BB3CF55044CB94', '8770BD43A33505C0', '63E09396DD2B969F'])
 
-const getRcon = async function () {
-  if (cached_rcon) {
-    return cached_rcon
+const handleOnData = async function (buffer) {
+  const formattedString = formatString(buffer.toString())
+
+  const [unformattedPlayfab, name, userMessage] = formattedString.split(',').map(val => val.trim())
+
+  if (!unformattedPlayfab || !userMessage) {
+    return
   }
 
-  const { RCON_HOST, RCON_PORT, RCON_PASSWORD } = process.env
+  const formattedPlayfab = unformattedPlayfab.split(' ')[1]
 
-  if (!RCON_HOST || !RCON_PORT || !RCON_PASSWORD) {
-    throw new Error('Not all RCON environment variables have been set up')
+  // Step 1 - check if command is valid
+  if (!userMessage.startsWith('.throttle ')) {
+    return console.log(`Skipping message "${userMessage}"`)
   }
 
-  cached_rcon = await Rcon.connect({
-    host: process.env.RCON_HOST,
-    port: process.env.RCON_PORT,
-    password: process.env.RCON_PASSWORD
-  })
+  // Step 2 - check if user is authorized
+  if (!authorizedPlayfabs.has(formattedPlayfab)) {
+    return console.error(`Player ${name}(${formattedPlayfab}) is unauthorized`)
+  }
 
-  return cached_rcon
+  console.log(`Player ${name}(${formattedPlayfab}) is authorized!`)
+
+  // Step 3 - check if user provided a valid number
+  const [_, minPing] = userMessage.split(' ')
+  const minPingAsNum = Number.parseInt(minPing)
+  if (Number.isNaN(minPingAsNum)) {
+    return console.error(`Invalid min ping provided: ${minPing}`)
+  }
+
+  if (minPingAsNum === 0) {
+    throttler.teardownProcesses()
+    return rcon.send(`say Throttling disabled`)
+  }
+
+  trafficRuleUpdater.setMinPing(minPingAsNum)
+  console.log(`Valid min ping provided: ${minPing}`)
+
+  if (global.hasProgramTerminated) {
+    await throttler.startupProcesses()
+  }
+
+  rcon.send(`say Setting minimum ping to ${minPing}`)
+}
+
+const handleOnError = function (err) {
+  console.log({ rconError: err })
 }
 
 const start = async function () {
-  const rcon = await getRcon()
-
-  const authorizedPlayfabs = new Set(['59BB3CF55044CB94', '8770BD43A33505C0', '63E09396DD2B969F'])
+  const rcon = await getRcon(true)
 
   try {
-    const sendCommand = await rcon.send('listen chat')
-
+    await rcon.send('listen chat')
     rcon.send('info').then(console.log)
-
-    rcon.socket.on('data', async function (buffer) {
-      const formattedString = formatString(buffer.toString())
-
-      const [unformattedPlayfab, name, userMessage] = formattedString
-        .split(',')
-        .map(val => val.trim())
-
-      if (!unformattedPlayfab || !userMessage) {
-        return
-      }
-
-      const formattedPlayfab = unformattedPlayfab.split(' ')[1]
-
-      // Step 1 - check if command is valid
-      if (!userMessage.startsWith('.throttle ')) {
-        return console.log(`Skipping message "${userMessage}"`)
-      }
-
-      // Step 2 - check if user is authorized
-      if (!authorizedPlayfabs.has(formattedPlayfab)) {
-        return console.error(`Player ${name}(${formattedPlayfab}) is unauthorized`)
-      }
-
-      console.log(`Player ${name}(${formattedPlayfab}) is authorized!`)
-
-      // Step 3 - check if user provided a valid number
-      const [_, minPing] = userMessage.split(' ')
-      const minPingAsNum = Number.parseInt(minPing)
-      if (Number.isNaN(minPingAsNum)) {
-        return console.error(`Invalid min ping provided: ${minPing}`)
-      }
-
-      if (minPingAsNum === 0) {
-        throttler.teardownProcesses()
-        return rcon.send(`say Throttling disabled`)
-      }
-
-      trafficRuleUpdater.setMinPing(minPingAsNum)
-      console.log(`Valid min ping provided: ${minPing}`)
-
-      if (global.hasProgramTerminated) {
-        await throttler.startupProcesses()
-      }
-
-      rcon.send(`say Setting minimum ping to ${minPing}`)
-    })
-
-    rcon.on('error', function (err) {
-      console.log({ rconError: err })
-    })
+    rcon.socket.on('data', handleOnData)
+    rcon.on('error', handleOnError)
   } catch (err) {
     console.error({ err })
+  } finally {
+    setTimeout(start, 15000)
   }
 }
 
