@@ -18,7 +18,12 @@ const formatString = function (string) {
     .replace(/ *\([^)]*\) */, ' ')
 }
 
-const authorizedPlayfabs = new Set(['59BB3CF55044CB94', '8770BD43A33505C0', '63E09396DD2B969F'])
+const authorizedPlayfabs = new Set([
+  '59BB3CF55044CB94',
+  '8770BD43A33505C0',
+  '63E09396DD2B969F',
+  'AA6380B4A04CCA37'
+])
 
 const start = async function () {
   const rcon = await getRcon(true)
@@ -78,7 +83,6 @@ const start = async function () {
     logError({ err })
   } finally {
     setTimeout(async () => {
-      await rcon?.end().catch(logError)
       start()
     }, 30000)
   }

@@ -41,12 +41,10 @@ const getRcon = async function (reconnect = false, wait = 0) {
     cached_rcon = await Promise.race([rconPromise, timeoutPromise])
     cached_rcon.on('error', async err => {
       logInfo('RCON connection emmitted error event:', err)
-      await cached_rcon?.end()?.catch(logError)
       cached_rcon = null
     })
     cached_rcon.on('end', async err => {
       logInfo('RCON connection emmitted end event')
-      await cached_rcon?.end()?.catch(logError)
       cached_rcon = null
     })
   } catch (err) {
