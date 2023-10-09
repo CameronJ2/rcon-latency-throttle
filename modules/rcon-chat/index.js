@@ -62,7 +62,7 @@ const handleOnData = async function (buffer) {
   await throttler.teardownProcesses()
 
   if (minPingAsNum === 0) {
-    return cachedrcon.send(`say Throttling disabled`)
+    return cachedRcon.send(`say Throttling disabled`)
   }
 
   trafficRuleUpdater.setMinPing(minPingAsNum)
@@ -72,7 +72,7 @@ const handleOnData = async function (buffer) {
     await throttler.startupProcesses()
   }
 
-  cachedrcon.send(`say Setting minimum ping to ${minPing}`)
+  cachedRcon.send(`say Setting minimum ping to ${minPing}`)
 }
 
 const start = async function () {
@@ -83,9 +83,9 @@ const start = async function () {
       cachedRcon = await getRcon()
     }
 
-    await cachedrcon.send('listen chat')
-    cachedrcon.send('info').then(logInfo)
-    cachedrcon.socket.on('data', handleOnData)
+    await cachedRcon.send('listen chat')
+    cachedRcon.send('info').then(logInfo)
+    cachedRcon.socket.on('data', handleOnData)
   } catch (err) {
     logError('RCON Module - Error in start function', err)
   } finally {
