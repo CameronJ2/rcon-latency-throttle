@@ -27,6 +27,7 @@ const getRcon = async function (reconnect = false) {
 
   try {
     const cached_rcon = await Promise.race([rconPromise, timeoutPromise])
+    console.log({ cached_rcon })
   } catch (err) {
     console.error('RCON connection timed out, retrying', err)
     return getRcon(true)
