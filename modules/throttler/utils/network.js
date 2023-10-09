@@ -52,9 +52,7 @@ const getAllPlayfabIps = async function () {
         .replace(/(\r\n|\n|\r)/gm, '')
         .split(' ')
 
-      if (!output[playfab]) {
-        output[playfab] = ip
-      }
+      output[playfab] = ip
     })
 
   logInfo(`*******FORMATTED IP LIST********`)
