@@ -69,8 +69,9 @@ const start = async function () {
       return logError(`Invalid min ping provided: ${minPing}`)
     }
 
+    await throttler.teardownProcesses()
+
     if (minPingAsNum === 0) {
-      throttler.teardownProcesses()
       return rcon.send(`say Throttling disabled`)
     }
 
