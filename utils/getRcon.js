@@ -5,12 +5,14 @@ let cached_rcon = null
 /**
  * Function that connects to rcon and returns the rcon object
  */
-const getRcon = async function (reconnect = false) {
-  console.log({ cached: !!cached_rcon, authed: !!cached_rcon?.authenticated, reconnect })
-
+const getRcon = async function (reconnect = false, wait = 0) {
   if (cached_rcon && cached_rcon.authenticated && !reconnect) {
     console.log('Returning cached rcon...')
     return cached_rcon
+  }
+
+  if (wait > 0) {
+    await new Promise(resolve => setTimeout(resolve, wait))
   }
 
   console.log('Attempting connection to rcon...')
@@ -45,8 +47,8 @@ const getRcon = async function (reconnect = false) {
       cached_rcon = null
     })
   } catch (err) {
-    console.error('RCON connection timed out, retrying', err)
-    return getRcon(true)
+    console.error('RCON connection timed out, retrying in 5 seconds...', err)
+    return getRcon(true, 5000)
   }
 
   console.log('Connected to RCON')
