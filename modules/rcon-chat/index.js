@@ -90,12 +90,11 @@ const start = async function () {
     rcon.socket.on('data', handleOnData)
   } catch (err) {
     logError({ err })
+  } finally {
+    setTimeout(async () => {
+      start()
+    }, 30000)
   }
-  // finally {
-  //   setTimeout(async () => {
-  //     start()
-  //   }, 30000)
-  // }
 }
 
 throttler.startupProcesses()
