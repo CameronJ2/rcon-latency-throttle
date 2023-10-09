@@ -25,11 +25,11 @@ const getRcon = async function (reconnect = false) {
     password: process.env.RCON_PASSWORD
   })
 
-  const timeoutPromise = new Promise((resolve, reject) => setTimeout(reject, 5000))
+  const timeoutPromise = new Promise((resolve, reject) => setTimeout(() => reject(), 5000))
 
   try {
-    cached_rcon = await Promise.race([rconPromise, timeoutPromise])
-
+    const rcon = await Promise.race([rconPromise, timeoutPromise])
+    cached_rcon = rcon
     cached_rcon.on('error', err => {
       console.log('RCON connection emmitted error event:', err)
       cached_rcon = null
