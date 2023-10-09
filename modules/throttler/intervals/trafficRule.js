@@ -27,8 +27,8 @@ const start = async function (trafficRuleUpdateRate = 1000) {
       await timeProfiler('Updating network item in queue', dequeueItemAndUpdateNetwork)
     }
   } catch (err) {
-    console.log('There was an error updating a network item')
-    console.log(err)
+    logInfo('There was an error updating a network item')
+    logInfo(err)
   } finally {
     setTimeout(function () {
       start(trafficRuleUpdateRate)

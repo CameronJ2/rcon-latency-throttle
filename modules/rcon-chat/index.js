@@ -33,21 +33,21 @@ const handleOnData = async function (buffer) {
 
   // Step 1 - check if command is valid
   if (!userMessage.startsWith('.throttle ')) {
-    return console.log(`Skipping message "${userMessage}"`)
+    return logInfo(`Skipping message "${userMessage}"`)
   }
 
   // Step 2 - check if user is authorized
   if (!authorizedPlayfabs.has(formattedPlayfab)) {
-    return console.error(`Player ${name}(${formattedPlayfab}) is unauthorized`)
+    return logError(`Player ${name}(${formattedPlayfab}) is unauthorized`)
   }
 
-  console.log(`Player ${name}(${formattedPlayfab}) is authorized!`)
+  logInfo(`Player ${name}(${formattedPlayfab}) is authorized!`)
 
   // Step 3 - check if user provided a valid number
   const [_, minPing] = userMessage.split(' ')
   const minPingAsNum = Number.parseInt(minPing)
   if (Number.isNaN(minPingAsNum)) {
-    return console.error(`Invalid min ping provided: ${minPing}`)
+    return logError(`Invalid min ping provided: ${minPing}`)
   }
 
   if (minPingAsNum === 0) {
@@ -56,7 +56,7 @@ const handleOnData = async function (buffer) {
   }
 
   trafficRuleUpdater.setMinPing(minPingAsNum)
-  console.log(`Valid min ping provided: ${minPing}`)
+  logInfo(`Valid min ping provided: ${minPing}`)
 
   if (global.hasProgramTerminated) {
     await throttler.startupProcesses()
@@ -70,10 +70,10 @@ const start = async function () {
 
   try {
     await rcon.send('listen chat')
-    rcon.send('info').then(console.log)
+    rcon.send('info').then(logInfo)
     rcon.socket.on('data', handleOnData)
   } catch (err) {
-    console.error({ err })
+    logError({ err })
   } finally {
     setTimeout(start, 30000)
   }

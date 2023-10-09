@@ -33,8 +33,8 @@ const start = async function (POLL_RATE = 10000) {
   try {
     await timeProfiler('Main', main)
   } catch (err) {
-    console.log('There was an error in main')
-    console.log(err)
+    logInfo('There was an error in main')
+    logInfo(err)
   } finally {
     setTimeout(() => start(POLL_RATE), POLL_RATE)
   }

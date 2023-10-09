@@ -6,13 +6,13 @@ global.hasProgramTerminated = false
 
 const deleteAllRulesWithLogging = function () {
   return NetworkUtils.deleteAllRules().then(function () {
-    console.log('Wiped rules successfully')
+    logInfo('Wiped rules successfully')
   })
 }
 
 const startupProcesses = async function () {
   await deleteAllRulesWithLogging().catch(function (err) {
-    console.log('Error while wiping rules', err)
+    logInfo('Error while wiping rules', err)
     process.exit()
   })
 
@@ -20,9 +20,9 @@ const startupProcesses = async function () {
   mainInterval.start(process.env.POLL_RATE)
   trafficRuleInterval.start(process.env.TRAFFIC_RULE_UPDATE_RATE)
 
-  console.log('hello!')
+  logInfo('hello!')
   const testLog = await NetworkUtils.getAllPlayfabIps()
-  console.log('getAllPlayfabIps:', testLog)
+  logInfo('getAllPlayfabIps:', testLog)
 }
 
 const teardownProcesses = async function () {
@@ -31,7 +31,7 @@ const teardownProcesses = async function () {
 }
 
 process.on('SIGINT', async () => {
-  console.log('Caught SIGINT. Performing cleanup before exiting.')
+  logInfo('Caught SIGINT. Performing cleanup before exiting.')
   await teardownProcesses()
   process.exit()
 })

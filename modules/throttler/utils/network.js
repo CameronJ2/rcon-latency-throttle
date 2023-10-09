@@ -18,14 +18,14 @@ const getNetworkInterfaceId = async function () {
       `containerId=$(docker ps --format "{{.ID}} | {{.Names}}" | grep ${process.env.CONTAINER_NAME} | awk '{ print $1 }') && interfaceId=$(docker exec -i "$containerId" cat /sys/class/net/eth0/iflink | sed 's/\\r$//') && ip ad | grep -E $interfaceId\\:.veth | awk '{ print $2 }' | awk -F@ '{ print $1 }'`
     ).then(output => output.trim())
 
-    console.log('GOT NETWORK ID', cached_networkInterfaceId)
+    logInfo('GOT NETWORK ID', cached_networkInterfaceId)
 
     setTimeout(() => {
       cached_networkInterfaceId = null
     }, 30000)
   }
 
-  console.log(`NETWORK INTERFACE ID:`, cached_networkInterfaceId)
+  logInfo(`NETWORK INTERFACE ID:`, cached_networkInterfaceId)
   return cached_networkInterfaceId
 }
 
@@ -57,9 +57,9 @@ const getAllPlayfabIps = async function () {
       }
     })
 
-  console.log(`*******FORMATTED IP LIST********`)
-  console.log(JSON.stringify(output, null, 2))
-  console.log('********************************')
+  logInfo(`*******FORMATTED IP LIST********`)
+  logInfo(JSON.stringify(output, null, 2))
+  logInfo('********************************')
 
   return output
 }

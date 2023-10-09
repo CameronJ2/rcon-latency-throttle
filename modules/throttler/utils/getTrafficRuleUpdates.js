@@ -69,7 +69,7 @@ const getPlayerInfoList = async function (rcon) {
     const ip = playfabsToIps[playfab]
 
     if (!ip || !ip.length) {
-      console.log(`Tried to throttle playfab ${playfab} but did not have IP`)
+      logInfo(`Tried to throttle playfab ${playfab} but did not have IP`)
       return
     }
 
