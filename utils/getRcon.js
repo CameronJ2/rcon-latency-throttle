@@ -14,6 +14,7 @@ const getRcon = async function (reconnect = false) {
   }
 
   console.log('Attempting connection to rcon...')
+  cached_rcon = null
 
   const { RCON_HOST, RCON_PORT, RCON_PASSWORD } = process.env
 
@@ -28,16 +29,13 @@ const getRcon = async function (reconnect = false) {
   })
 
   const timeoutPromise = new Promise((resolve, reject) => {
-    console.log('In timeout promise...')
     setTimeout(() => {
-      console.log('Rejecting...')
       reject()
     }, 5000)
   })
 
   try {
-    const rcon = await Promise.race([rconPromise, timeoutPromise])
-    cached_rcon = rcon
+    cached_rcon = await Promise.race([rconPromise, timeoutPromise])
     cached_rcon.on('error', err => {
       console.log('RCON connection emmitted error event:', err)
       cached_rcon = null
