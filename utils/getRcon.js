@@ -38,6 +38,10 @@ const getRcon = async function (reconnect = false) {
       console.log('RCON connection emmitted error event:', err)
       cached_rcon = null
     })
+    cached_rcon.on('end', err => {
+      console.log('RCON connection emmitted end event')
+      cached_rcon = null
+    })
   } catch (err) {
     console.error('RCON connection timed out, retrying', err)
     return getRcon(true)
