@@ -75,7 +75,7 @@ const start = async function () {
   } catch (err) {
     console.error({ err })
   } finally {
-    setTimeout(start, 20000)
+    setTimeout(start, 30000)
   }
 }
 
