@@ -39,13 +39,13 @@ const getRcon = async function (wait = 0) {
       logInfo('RCON connection emmitted end event', event)
       await rcon?.end()?.catch(logError)
     })
+
+    logInfo('Connected to RCON')
+    return rcon
   } catch (err) {
     logError('RCON connection timed out, retrying in 10 seconds...', err)
     return getRcon(10000)
   }
-
-  logInfo('Connected to RCON')
-  return rcon
 }
 
 module.exports = getRcon
