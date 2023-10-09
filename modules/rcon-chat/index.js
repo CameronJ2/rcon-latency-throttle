@@ -28,6 +28,10 @@ const authorizedPlayfabs = new Set([
 let cachedRcon = null
 
 const handleOnData = async function (buffer) {
+  if (!cachedRcon?.authenticated) {
+    return
+  }
+
   const formattedString = formatString(buffer.toString())
 
   console.log({ formattedString })
@@ -80,6 +84,7 @@ const start = async function () {
     if (!cachedRcon?.authenticated) {
       logInfo('RCON Module - RCON not connected, attempting reconnect...')
       await cachedRcon?.end()?.catch(logError)
+      cachedRcon = null
       cachedRcon = await getRcon()
     }
 
@@ -88,6 +93,7 @@ const start = async function () {
     cachedRcon.socket.on('data', handleOnData)
   } catch (err) {
     logError('RCON Module - Error in start function', err)
+    await cachedRcon?.end()?.catch(logError)
   } finally {
     setTimeout(() => {
       start()
