@@ -47,8 +47,8 @@ const getRcon = async function (reconnect = false, wait = 0) {
       cached_rcon = null
     })
   } catch (err) {
-    console.error('RCON connection timed out, retrying in 5 seconds...', err)
-    return getRcon(true, 5000)
+    console.error('RCON connection timed out, retrying in 10 seconds...', err)
+    return getRcon(true, 10000)
   }
 
   console.log('Connected to RCON')
