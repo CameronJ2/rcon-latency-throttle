@@ -33,11 +33,13 @@ const getRcon = async function (wait = 0) {
     const rcon = await Promise.race([rconPromise, timeoutPromise])
     rcon.on('error', async err => {
       logError('RCON connection emmitted error event:', err)
-      await rcon?.end()?.catch(logError)
+      await rcon?.socket?.removeAllListeners?.()?.catch?.(logError)
+      await rcon?.socket?.destroy?.()?.catch?.(logError)
     })
     rcon.on('end', async event => {
       logInfo('RCON connection emmitted end event', event)
-      await rcon?.end()?.catch(logError)
+      await rcon?.socket?.removeAllListeners?.()?.catch?.(logError)
+      await rcon?.socket?.destroy?.()?.catch?.(logError)
     })
 
     logInfo('Connected to RCON')
