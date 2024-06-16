@@ -1,11 +1,6 @@
 # RCON Latency Throttler
 
 ## Description 
-	Inbox Guardian is an SMS spam filter meant to be deployed in addition to any existing SMS application allowing users 
-	the ability to enjoy all the features of their favorite SMS application along with the added protection against spam 
-	and fishing messages. Inbox Guardian employs the use of a logistic regression model, the BERT language model, and 
-	other holistic methods such as keyword recognition to flag spam messages.
-
     The RCON Latency Throttler is a server tool that allows the host to throttle all IPs connected to the server to
     a predefined minimum. It's written entirely in javascript and is run using the Node.js runtime. This tool is 
     designed and implemented specifically for Mordhau.
