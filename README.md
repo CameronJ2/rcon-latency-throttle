@@ -1,4 +1,5 @@
 # RCON Latency Throttler
+![Mordhau](https://github.com/CameronJ2/rcon-latency-throttle/assets/114731000/33c33cec-914f-4ad0-83e0-748d55779851)
 
 ## Description 
     The RCON Latency Throttler is a server tool that allows the host to throttle all IPs connected to 
